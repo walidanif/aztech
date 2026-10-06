@@ -118,6 +118,19 @@
                 </div>
             </div>
 
+            <!-- Categories -->
+            <section class="mb-10">
+                <h3 class="text-xl font-bold mb-6 border-b-2 border-brand-orange inline-block pb-1" data-i18n="categories">الأصناف</h3>
+                <div class="grid grid-cols-2 gap-3 text-start sm:grid-cols-3 lg:grid-cols-6">
+                    <button onclick="switchTab('telephones')" class="rounded-lg border border-gray-200 bg-white p-4 text-start font-semibold text-brand-blue shadow-sm transition hover:border-brand-orange" data-i18n="phones">الهواتف</button>
+                    <button onclick="switchTab('laptops')" class="rounded-lg border border-gray-200 bg-white p-4 text-start font-semibold text-brand-blue shadow-sm transition hover:border-brand-orange" data-i18n="laptops">الحواسيب المحمولة</button>
+                    <button onclick="switchTab('accessoires')" class="rounded-lg border border-gray-200 bg-white p-4 text-start font-semibold text-brand-blue shadow-sm transition hover:border-brand-orange" data-i18n="accessories">الإكسسوارات</button>
+                    <button onclick="switchTab('televiseurs')" class="rounded-lg border border-gray-200 bg-white p-4 text-start font-semibold text-brand-blue shadow-sm transition hover:border-brand-orange" data-i18n="tvs">التلفزيونات</button>
+                    <button onclick="switchTab('electromenagers')" class="rounded-lg border border-gray-200 bg-white p-4 text-start font-semibold text-brand-blue shadow-sm transition hover:border-brand-orange" data-i18n="appliances">الأجهزة المنزلية</button>
+                    <button onclick="switchTab('catalogue')" class="rounded-lg border border-gray-200 bg-white p-4 text-start font-semibold text-brand-blue shadow-sm transition hover:border-brand-orange" data-i18n="viewAll">عرض الكل</button>
+                </div>
+            </section>
+
             <section class="mb-12" aria-labelledby="promotions-title">
                 <div class="mb-5 flex flex-wrap items-end justify-between gap-3">
                     <div>
@@ -136,7 +149,21 @@
                 <div id="promotions-slider" class="hide-scroll flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth pb-3" aria-label="المنتجات المخفضة" aria-live="off"></div>
             </section>
 
-            <section class="mb-10 grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4" aria-labelledby="trust-title">
+            <!-- Featured Products -->
+            <section class="mb-12">
+                <div class="flex flex-wrap justify-between items-end gap-3 mb-6">
+                    <div>
+                        <h3 class="text-xl font-bold border-b-2 border-brand-orange inline-block pb-1" data-i18n="featured">منتجات مميزة</h3>
+                        <p class="mt-2 text-sm text-gray-500" data-i18n="priceNote">يرجى تأكيد السعر والتوفر مع فريقنا.</p>
+                    </div>
+                    <button onclick="switchTab('catalogue')" class="text-sm font-semibold text-brand-blue hover:underline" data-i18n="viewAll">عرض الكل</button>
+                </div>
+                <div id="featured-products-container" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+                    <!-- Products injected via JS -->
+                </div>
+            </section>
+
+            <section class="mb-12 grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4" aria-labelledby="trust-title">
                 <h3 id="trust-title" class="sr-only" data-i18n="trustTitle">معلومات تهمك قبل الطلب</h3>
                 <article class="rounded-xl border border-gray-200 border-t-2 border-t-brand-orange bg-white p-4 sm:p-5">
                     <h4 class="font-bold text-brand-blue" data-i18n="trustShippingTitle">توصيل عبر المغرب</h4>
@@ -152,30 +179,26 @@
                 </article>
             </section>
 
-            <!-- Categories -->
-            <section class="mb-12">
-                <h3 class="text-xl font-bold mb-6 border-b-2 border-brand-orange inline-block pb-1" data-i18n="categories">الأصناف</h3>
-                <div class="grid grid-cols-2 gap-3 text-start sm:grid-cols-3 lg:grid-cols-6">
-                    <button onclick="switchTab('telephones')" class="rounded-lg border border-gray-200 bg-white p-4 text-start font-semibold text-brand-blue shadow-sm transition hover:border-brand-orange" data-i18n="phones">الهواتف</button>
-                    <button onclick="switchTab('laptops')" class="rounded-lg border border-gray-200 bg-white p-4 text-start font-semibold text-brand-blue shadow-sm transition hover:border-brand-orange" data-i18n="laptops">الحواسيب المحمولة</button>
-                    <button onclick="switchTab('accessoires')" class="rounded-lg border border-gray-200 bg-white p-4 text-start font-semibold text-brand-blue shadow-sm transition hover:border-brand-orange" data-i18n="accessories">الإكسسوارات</button>
-                    <button onclick="switchTab('televiseurs')" class="rounded-lg border border-gray-200 bg-white p-4 text-start font-semibold text-brand-blue shadow-sm transition hover:border-brand-orange" data-i18n="tvs">التلفزيونات</button>
-                    <button onclick="switchTab('electromenagers')" class="rounded-lg border border-gray-200 bg-white p-4 text-start font-semibold text-brand-blue shadow-sm transition hover:border-brand-orange" data-i18n="appliances">الأجهزة المنزلية</button>
-                    <button onclick="switchTab('catalogue')" class="rounded-lg border border-gray-200 bg-white p-4 text-start font-semibold text-brand-blue shadow-sm transition hover:border-brand-orange" data-i18n="viewAll">عرض الكل</button>
-                </div>
-            </section>
-
-            <!-- Featured Products -->
-            <section class="mb-12">
-                <div class="flex flex-wrap justify-between items-end gap-3 mb-6">
-                    <div>
-                        <h3 class="text-xl font-bold border-b-2 border-brand-orange inline-block pb-1" data-i18n="featured">منتجات مميزة</h3>
-                        <p class="mt-2 text-sm text-gray-500" data-i18n="priceNote">يرجى تأكيد السعر والتوفر مع فريقنا.</p>
-                    </div>
-                    <button onclick="switchTab('catalogue')" class="text-sm font-semibold text-brand-blue hover:underline" data-i18n="viewAll">عرض الكل</button>
-                </div>
-                <div id="featured-products-container" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-                    <!-- Products injected via JS -->
+            <section class="mb-12 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm md:p-8" aria-labelledby="customer-reviews-title">
+                <div class="mx-auto max-w-2xl text-center">
+                    <h3 id="customer-reviews-title" class="text-2xl font-bold text-brand-blue" data-i18n="reviewsTitle">Avis clients</h3>
+                    <p class="mt-2 text-sm leading-6 text-gray-600" data-i18n="reviewsEmpty">Aucun avis publié pour le moment. Soyez le premier à partager votre expérience.</p>
+                    <form class="mt-6" onsubmit="submitCustomerReview(event)">
+                        <fieldset>
+                            <legend class="mb-3 font-semibold text-brand-blue" data-i18n="reviewPrompt">Votre expérience mérite quelle note ?</legend>
+                            <div class="flex justify-center gap-2" role="group" aria-label="Votre note sur cinq étoiles">
+                                <button type="button" class="review-star rounded p-1 text-3xl text-gray-300 transition hover:scale-110 focus:outline-none focus:ring-2 focus:ring-brand-orange" data-rating="1" aria-label="1 étoile" aria-pressed="false" onclick="setCustomerRating(1)"><i class="fa-regular fa-star" aria-hidden="true"></i></button>
+                                <button type="button" class="review-star rounded p-1 text-3xl text-gray-300 transition hover:scale-110 focus:outline-none focus:ring-2 focus:ring-brand-orange" data-rating="2" aria-label="2 étoiles" aria-pressed="false" onclick="setCustomerRating(2)"><i class="fa-regular fa-star" aria-hidden="true"></i></button>
+                                <button type="button" class="review-star rounded p-1 text-3xl text-gray-300 transition hover:scale-110 focus:outline-none focus:ring-2 focus:ring-brand-orange" data-rating="3" aria-label="3 étoiles" aria-pressed="false" onclick="setCustomerRating(3)"><i class="fa-regular fa-star" aria-hidden="true"></i></button>
+                                <button type="button" class="review-star rounded p-1 text-3xl text-gray-300 transition hover:scale-110 focus:outline-none focus:ring-2 focus:ring-brand-orange" data-rating="4" aria-label="4 étoiles" aria-pressed="false" onclick="setCustomerRating(4)"><i class="fa-regular fa-star" aria-hidden="true"></i></button>
+                                <button type="button" class="review-star rounded p-1 text-3xl text-gray-300 transition hover:scale-110 focus:outline-none focus:ring-2 focus:ring-brand-orange" data-rating="5" aria-label="5 étoiles" aria-pressed="false" onclick="setCustomerRating(5)"><i class="fa-regular fa-star" aria-hidden="true"></i></button>
+                            </div>
+                        </fieldset>
+                        <label for="customer-review-text" class="sr-only" data-i18n="reviewCommentLabel">Votre commentaire (facultatif)</label>
+                        <textarea id="customer-review-text" maxlength="1000" rows="3" class="mt-4 w-full rounded-lg border border-gray-300 p-3 text-start text-sm focus:border-brand-orange focus:outline-none focus:ring-2 focus:ring-red-100" data-i18n-placeholder="reviewCommentPlaceholder" placeholder="Partagez votre expérience (facultatif)"></textarea>
+                        <p id="customer-review-status" class="mt-3 hidden text-sm text-red-700" role="status" aria-live="polite"></p>
+                        <button type="submit" class="mt-4 rounded-md bg-brand-orange px-6 py-3 font-bold text-white transition hover:brightness-95" data-i18n="reviewSubmit">Partager mon avis sur WhatsApp</button>
+                    </form>
                 </div>
             </section>
 
@@ -364,6 +387,7 @@
         const GOOGLE_SHEETS_WEB_APP_URL = 'PASTE_YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE';
         const WHATSAPP_NUMBER = '212652517115';
         let selectedProduct = null;
+        let selectedReviewRating = 0;
         const currentLanguage = 'fr';
 
         const translations = {
@@ -389,6 +413,14 @@
                 trustConfirmText: 'نتواصل معك لمراجعة معلوماتك قبل تأكيد الطلب.',
                 trustSupportTitle: 'تواصل مباشر',
                 trustSupportText: 'اسألنا عبر واتساب عن المنتج والتوفر.',
+                reviewsTitle: 'آراء الزبناء',
+                reviewsEmpty: 'لا توجد آراء منشورة حالياً. كن أول من يشارك تجربته.',
+                reviewPrompt: 'كم تقيّم تجربتك؟',
+                reviewCommentLabel: 'تعليقك (اختياري)',
+                reviewCommentPlaceholder: 'شاركنا تجربتك (اختياري)',
+                reviewSubmit: 'شارك رأيك عبر واتساب',
+                reviewRatingRequired: 'يرجى اختيار تقييم من نجمة إلى خمس نجوم.',
+                reviewWhatsappOpened: 'سيفتح واتساب برسالتك. أرسلها لمشاركة تقييمك.',
                 orderTitle: 'إتمام الطلب', orderInstructions: 'أدخل معلوماتك وسنتواصل معك لتأكيد الطلب.',
                 firstName: 'الاسم الشخصي', lastName: 'النسب', phone: 'رقم الهاتف',
                 address: 'عنوان التوصيل', addressPlaceholder: 'الشارع، الحي، المدينة',
@@ -442,6 +474,14 @@
                 trustConfirmText: 'Nous vous contactons pour vérifier les informations avant de confirmer.',
                 trustSupportTitle: 'Contact direct',
                 trustSupportText: 'Posez-nous vos questions sur le produit et sa disponibilité via WhatsApp.',
+                reviewsTitle: 'Avis clients',
+                reviewsEmpty: 'Aucun avis publié pour le moment. Soyez le premier à partager votre expérience.',
+                reviewPrompt: 'Quelle note attribuez-vous à votre expérience ?',
+                reviewCommentLabel: 'Votre commentaire (facultatif)',
+                reviewCommentPlaceholder: 'Partagez votre expérience (facultatif)',
+                reviewSubmit: 'Partager mon avis sur WhatsApp',
+                reviewRatingRequired: 'Veuillez choisir une note de une à cinq étoiles.',
+                reviewWhatsappOpened: 'WhatsApp va s’ouvrir avec votre avis. Envoyez le message pour le partager.',
                 orderTitle: 'Commander',
                 orderInstructions: 'Remplissez vos coordonnées. Nous vous contacterons pour confirmer la commande.',
                 firstName: 'Prénom', lastName: 'Nom', phone: 'Numéro de téléphone',
@@ -527,6 +567,40 @@
 
         function contactOrderTracking(event) {
             const message = 'Bonjour, je souhaite connaître le statut de ma commande.';
+            openWhatsApp(event, message);
+        }
+
+        function setCustomerRating(rating) {
+            if (!Number.isInteger(rating) || rating < 1 || rating > 5) return;
+            selectedReviewRating = rating;
+            document.querySelectorAll('.review-star').forEach(button => {
+                const isSelected = Number(button.dataset.rating) <= rating;
+                button.setAttribute('aria-pressed', String(Number(button.dataset.rating) === rating));
+                button.classList.toggle('text-brand-orange', isSelected);
+                button.classList.toggle('text-gray-300', !isSelected);
+                button.querySelector('i').className = isSelected
+                    ? 'fa-solid fa-star'
+                    : 'fa-regular fa-star';
+            });
+        }
+
+        function submitCustomerReview(event) {
+            event.preventDefault();
+            const status = document.getElementById('customer-review-status');
+            if (!selectedReviewRating) {
+                status.textContent = t('reviewRatingRequired');
+                status.classList.remove('hidden');
+                return;
+            }
+
+            const comment = document.getElementById('customer-review-text').value.trim();
+            const message = [
+                'Bonjour AZ TECH, je souhaite partager mon avis.',
+                'Note : ' + selectedReviewRating + '/5 étoiles.',
+                comment ? 'Commentaire : ' + comment : ''
+            ].filter(Boolean).join('\n');
+            status.textContent = t('reviewWhatsappOpened');
+            status.classList.remove('hidden');
             openWhatsApp(event, message);
         }
 
