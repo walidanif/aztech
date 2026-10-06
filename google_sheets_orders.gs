@@ -2,7 +2,7 @@
  * Google Apps Script endpoint for AZ TECH order forms.
  * Paste this file into the Apps Script project attached to your orders spreadsheet.
  * Deploy it as a Web App (execute as you; access: anyone), then paste the /exec URL
- * into GOOGLE_SHEETS_WEB_APP_URL in electro_salam_e_commerce.html.
+ * into GOOGLE_SHEETS_WEB_APP_URL in index.html.
  */
 
 const ORDERS_SHEET_NAME = 'Commandes';
@@ -52,16 +52,25 @@ function doPost(e) {
     const lastName = cleanText(data.lastName, 80);
     const phone = cleanText(data.phone, 24);
     const address = cleanText(data.address, 500);
-    const productId = Number(data.productId);
-    const quantity = Number(data.quantity);
-    const product = ORDER_CATALOG[productId];
+    const requestedItems = Array.isArray(data.items)
+      ? data.items
+      : [{ productId: data.productId, quantity: data.quantity }];
 
     if (!firstName || !lastName || !address || !/^\+?[0-9 ()\-]{8,24}$/.test(phone)) {
       throw new Error('Missing or invalid customer details.');
     }
-    if (!product || !Number.isInteger(quantity) || quantity < 1 || quantity > 20) {
-      throw new Error('Unknown product or invalid quantity.');
+    if (requestedItems.length < 1 || requestedItems.length > 50) {
+      throw new Error('The order must contain between 1 and 50 products.');
     }
+    const orderItems = requestedItems.map(item => {
+      const productId = Number(item.productId);
+      const quantity = Number(item.quantity);
+      const product = ORDER_CATALOG[productId];
+      if (!product || !Number.isInteger(quantity) || quantity < 1 || quantity > 20) {
+        throw new Error('Unknown product or invalid quantity.');
+      }
+      return { productId, quantity, product };
+    });
 
     const spreadsheet = SpreadsheetApp.openById(ORDERS_SPREADSHEET_ID);
     let sheet = spreadsheet.getSheetByName(ORDERS_SHEET_NAME);
@@ -71,10 +80,11 @@ function doPost(e) {
       sheet.setFrozenRows(1);
     }
 
-    const unitPrice = product.price;
-    sheet.appendRow([
-      Utilities.getUuid(),
-      new Date(),
+    const reference = Utilities.getUuid();
+    const receivedAt = new Date();
+    const rows = orderItems.map(({ productId, quantity, product }) => [
+      reference,
+      receivedAt,
       safeCell(firstName),
       safeCell(lastName),
       safeCell(phone),
@@ -82,10 +92,11 @@ function doPost(e) {
       productId,
       product.title,
       quantity,
-      unitPrice,
-      unitPrice * quantity,
+      product.price,
+      product.price * quantity,
       'MAD'
     ]);
+    sheet.getRange(sheet.getLastRow() + 1, 1, rows.length, ORDER_HEADERS.length).setValues(rows);
 
     return ContentService.createTextOutput('OK');
   } catch (error) {

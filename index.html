@@ -37,6 +37,7 @@
         .brand-wordmark .brand-a { color: #d1d2d6; }
         .brand-wordmark .brand-z { color: #e5091b; }
         .hero-banner { background: radial-gradient(ellipse at 85% 15%, #252529 0%, #101012 54%, #080809 100%); }
+        .drawer-backdrop[aria-hidden="true"] { display: none; }
     </style>
 </head>
 <body class="text-gray-800">
@@ -54,31 +55,52 @@
 
     <!-- Main Header -->
     <header class="bg-brand-blue text-white sticky top-0 z-50 shadow-md">
-        <div class="container mx-auto px-4 py-4 flex flex-wrap lg:flex-nowrap items-center justify-between gap-4">
-            <!-- Logo -->
-            <div class="flex w-full items-center justify-center lg:w-auto lg:justify-start">
-                <a href="#" onclick="switchTab('accueil')" class="flex items-center gap-2" aria-label="AZ TECH Maroc, accueil">
-                    <img src="assets/az-tech-logo.png" alt="AZ TECH Maroc" class="h-16 w-24 object-contain">
-                </a>
+        <div class="container mx-auto flex items-center justify-between gap-2 px-3 py-2 sm:px-4 lg:gap-6 lg:py-3">
+            <div class="flex shrink-0 items-center gap-1 lg:hidden">
+                <button id="mobile-menu-button" type="button" onclick="openDrawer('category-drawer')" class="flex h-11 w-11 items-center justify-center rounded-lg text-xl text-white transition hover:bg-white/10" aria-label="Ouvrir les catégories" aria-controls="category-drawer" aria-expanded="false">
+                    <i class="fa-solid fa-bars" aria-hidden="true"></i>
+                </button>
+                <button type="button" onclick="openDrawer('cart-drawer')" class="relative flex h-11 w-11 items-center justify-center rounded-lg text-xl text-white transition hover:bg-white/10" aria-label="Ouvrir le panier">
+                    <i class="fa-solid fa-bag-shopping" aria-hidden="true"></i>
+                    <span id="mobile-cart-count" class="absolute right-0 top-0 flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-orange px-1 text-xs font-bold text-white" aria-live="polite">0</span>
+                </button>
             </div>
 
-            <!-- Search Bar -->
-            <div class="min-w-0 mx-auto w-[92%] max-w-xl flex-grow order-3 sm:w-full lg:order-2 lg:w-auto">
+            <a href="#" onclick="switchTab('accueil')" class="flex min-w-0 flex-1 items-center justify-center lg:flex-none lg:justify-start" aria-label="AZ TECH Maroc, accueil">
+                    <img src="assets/az-tech-logo.png" alt="AZ TECH Maroc" class="h-[4.5rem] w-full max-w-[12rem] object-contain sm:h-20 sm:max-w-[13rem] lg:h-24 lg:w-56 lg:max-w-none">
+                </a>
+
+            <div class="hidden min-w-0 max-w-xl flex-1 lg:block">
                 <form id="search-form" class="relative flex w-full items-center gap-2" onsubmit="searchProducts(event)">
-                    <input id="search-input" type="search" data-i18n-placeholder="searchPlaceholder" placeholder="Rechercher un produit ou une marque..." class="min-w-0 w-full py-2.5 px-3 sm:px-4 rounded-md text-base text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-orange">
-                    <button type="submit" class="shrink-0 self-stretch bg-brand-orange hover:brightness-95 text-white font-semibold py-2 px-4 sm:px-5 rounded-md transition">
+                    <input id="search-input" type="search" data-i18n-placeholder="searchPlaceholder" placeholder="Rechercher un produit ou une marque..." class="min-w-0 w-full rounded-md px-4 py-2.5 text-base text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-orange">
+                    <button type="submit" class="shrink-0 self-stretch rounded-md bg-brand-orange px-5 py-2 font-semibold text-white transition hover:brightness-95">
                         <span data-i18n="search">Rechercher</span>
                     </button>
                 </form>
             </div>
 
-            <div class="hidden lg:block text-sm font-medium text-white/90 order-2 lg:order-3">
-                <span data-i18n="quickOrder">طلب سريع وتوصيل لجميع أنحاء المغرب</span>
-            </div>
+            <button id="desktop-cart-button" type="button" onclick="openDrawer('cart-drawer')" class="hidden shrink-0 items-center gap-2 rounded-lg border border-white/25 px-4 py-3 font-semibold text-white transition hover:border-brand-orange hover:bg-white/10 lg:inline-flex" aria-label="Ouvrir le panier">
+                <i class="fa-solid fa-bag-shopping" aria-hidden="true"></i>
+                <span data-i18n="cart">Panier</span>
+                <span id="desktop-cart-count" class="rounded-full bg-brand-orange px-2 py-0.5 text-xs font-bold text-white" aria-live="polite">0</span>
+            </button>
+
+            <button id="mobile-search-button" type="button" onclick="toggleMobileSearch()" class="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-xl text-white transition hover:bg-white/10 lg:hidden" aria-label="Rechercher" aria-expanded="false" aria-controls="mobile-search-panel">
+                <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+            </button>
+        </div>
+
+        <div id="mobile-search-panel" class="hidden border-t border-white/10 px-3 py-3 lg:hidden">
+            <form id="mobile-search-form" class="flex items-center gap-2" onsubmit="searchProducts(event)">
+                <input id="mobile-search-input" type="search" data-i18n-placeholder="searchPlaceholder" placeholder="Rechercher un produit ou une marque..." class="min-w-0 flex-1 rounded-lg bg-white px-3 py-2.5 text-base text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-orange">
+                <button type="submit" class="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-brand-orange text-white" aria-label="Lancer la recherche">
+                    <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                </button>
+            </form>
         </div>
 
         <!-- Navigation Menu -->
-        <nav class="bg-white text-gray-800 border-b border-gray-200 shadow-sm">
+        <nav class="hidden bg-white text-gray-800 border-b border-gray-200 shadow-sm lg:block">
             <div class="container mx-auto px-4 overflow-x-auto hide-scroll">
                 <ul class="flex min-w-max gap-4 sm:gap-8 text-sm font-medium py-2 whitespace-nowrap">
                     <li><button onclick="switchTab('accueil')" id="nav-accueil" class="nav-link text-brand-blue border-b-2 border-brand-blue font-bold pb-1 hover:text-brand-blue transition" data-i18n="home">الرئيسية</button></li>
@@ -92,6 +114,42 @@
             </div>
         </nav>
     </header>
+
+    <div id="drawer-backdrop" class="drawer-backdrop fixed inset-0 z-[110] bg-black/50" aria-hidden="true" onclick="closeDrawers()"></div>
+    <aside id="category-drawer" class="fixed inset-y-0 left-0 z-[120] flex w-[85vw] max-w-xs -translate-x-full flex-col bg-white shadow-2xl transition-transform duration-200 lg:hidden" role="dialog" aria-modal="true" aria-labelledby="category-drawer-title" aria-hidden="true">
+        <div class="flex items-center justify-between border-b border-gray-200 px-5 py-4">
+            <h2 id="category-drawer-title" class="text-lg font-bold text-brand-blue" data-i18n="categories">Catégories</h2>
+            <button type="button" onclick="closeDrawers()" class="flex h-10 w-10 items-center justify-center rounded-lg text-gray-600 hover:bg-gray-100" aria-label="Fermer">
+                <i class="fa-solid fa-xmark text-lg" aria-hidden="true"></i>
+            </button>
+        </div>
+        <nav class="overflow-y-auto p-3" aria-label="Catégories de produits">
+            <button onclick="switchTab('accueil'); closeDrawers()" class="flex w-full items-center gap-3 rounded-lg px-3 py-3 text-start font-semibold text-gray-700 hover:bg-gray-100"><i class="fa-solid fa-house w-5 text-brand-orange" aria-hidden="true"></i><span data-i18n="home">Accueil</span></button>
+            <button onclick="switchTab('catalogue'); closeDrawers()" class="flex w-full items-center gap-3 rounded-lg px-3 py-3 text-start font-semibold text-gray-700 hover:bg-gray-100"><i class="fa-solid fa-border-all w-5 text-brand-orange" aria-hidden="true"></i><span data-i18n="allProducts">Tous les articles</span></button>
+            <button onclick="switchTab('telephones'); closeDrawers()" class="flex w-full items-center gap-3 rounded-lg px-3 py-3 text-start font-semibold text-gray-700 hover:bg-gray-100"><i class="fa-solid fa-mobile-screen-button w-5 text-brand-orange" aria-hidden="true"></i><span data-i18n="phones">Téléphones</span></button>
+            <button onclick="switchTab('laptops'); closeDrawers()" class="flex w-full items-center gap-3 rounded-lg px-3 py-3 text-start font-semibold text-gray-700 hover:bg-gray-100"><i class="fa-solid fa-laptop w-5 text-brand-orange" aria-hidden="true"></i><span data-i18n="laptops">Ordinateurs portables</span></button>
+            <button onclick="switchTab('accessoires'); closeDrawers()" class="flex w-full items-center gap-3 rounded-lg px-3 py-3 text-start font-semibold text-gray-700 hover:bg-gray-100"><i class="fa-solid fa-headphones w-5 text-brand-orange" aria-hidden="true"></i><span data-i18n="accessories">Accessoires</span></button>
+            <button onclick="switchTab('televiseurs'); closeDrawers()" class="flex w-full items-center gap-3 rounded-lg px-3 py-3 text-start font-semibold text-gray-700 hover:bg-gray-100"><i class="fa-solid fa-tv w-5 text-brand-orange" aria-hidden="true"></i><span data-i18n="tvs">Téléviseurs</span></button>
+            <button onclick="switchTab('electromenagers'); closeDrawers()" class="flex w-full items-center gap-3 rounded-lg px-3 py-3 text-start font-semibold text-gray-700 hover:bg-gray-100"><i class="fa-solid fa-blender w-5 text-brand-orange" aria-hidden="true"></i><span data-i18n="appliances">Électroménager</span></button>
+        </nav>
+    </aside>
+
+    <aside id="cart-drawer" class="fixed inset-y-0 right-0 z-[120] flex w-[92vw] max-w-md translate-x-full flex-col bg-white shadow-2xl transition-transform duration-200" role="dialog" aria-modal="true" aria-labelledby="cart-drawer-title" aria-hidden="true">
+        <div class="flex items-center justify-between border-b border-gray-200 px-5 py-4">
+            <h2 id="cart-drawer-title" class="text-lg font-bold text-brand-blue"><span data-i18n="cart">Panier</span> <span class="text-gray-500">(<span id="cart-drawer-count">0</span>)</span></h2>
+            <button type="button" onclick="closeDrawers()" class="flex h-10 w-10 items-center justify-center rounded-lg text-gray-600 hover:bg-gray-100" aria-label="Fermer">
+                <i class="fa-solid fa-xmark text-lg" aria-hidden="true"></i>
+            </button>
+        </div>
+        <div id="cart-items" class="flex-1 space-y-3 overflow-y-auto p-4"></div>
+        <div class="border-t border-gray-200 p-4">
+            <div class="mb-4 flex items-center justify-between text-lg font-bold text-brand-blue">
+                <span data-i18n="total">Total</span><span id="cart-total">0 DH</span>
+            </div>
+            <button id="checkout-cart-button" type="button" onclick="checkoutCart()" class="w-full rounded-lg bg-brand-orange px-5 py-3 font-bold text-white transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-50" disabled data-i18n="finalizeOrder">Finaliser la commande</button>
+        </div>
+    </aside>
+    <p id="cart-announcement" class="sr-only" aria-live="polite"></p>
 
     <main class="container mx-auto px-4 py-8 min-h-[60vh]">
         <section id="search-results" class="hidden mb-10">
@@ -282,9 +340,6 @@
                 <label class="block text-sm font-medium text-gray-700"><span data-i18n="address">عنوان التوصيل</span>
                     <textarea name="address" autocomplete="street-address" required maxlength="500" rows="3" data-i18n-placeholder="addressPlaceholder" placeholder="الشارع، الحي، المدينة" class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-base font-normal focus:border-brand-blue focus:outline-none focus:ring-2 focus:ring-blue-200"></textarea>
                 </label>
-                <label class="block text-sm font-medium text-gray-700"><span data-i18n="quantity">الكمية</span>
-                    <input id="order-quantity" name="quantity" type="number" min="1" max="20" value="1" required class="mt-1 w-28 rounded-md border border-gray-300 px-3 py-2 text-base font-normal focus:border-brand-blue focus:outline-none focus:ring-2 focus:ring-blue-200">
-                </label>
                 <p id="checkout-message" class="hidden rounded-md px-3 py-2 text-sm" role="status" aria-live="polite"></p>
                 <div class="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:justify-end">
                     <button type="button" onclick="closeCheckout()" class="rounded-md border border-gray-300 px-5 py-2.5 font-medium text-gray-700 hover:bg-gray-50" data-i18n="cancel">إلغاء</button>
@@ -309,7 +364,7 @@
                     <span id="detail-old-price" class="mr-2 text-sm text-gray-400 line-through"></span>
                     <span id="detail-price" class="text-2xl font-bold text-brand-blue"></span>
                 </div>
-                <button id="detail-order-button" type="button" class="w-full rounded-md bg-brand-orange px-5 py-3 font-bold text-white hover:brightness-95" data-i18n="orderThis">Commander cet article</button>
+                <button id="detail-order-button" type="button" class="w-full rounded-md bg-brand-orange px-5 py-3 font-bold text-white hover:brightness-95" data-i18n="addToCart">Ajouter au panier</button>
             </div>
         </section>
     </div>
@@ -388,6 +443,7 @@
         const WHATSAPP_NUMBER = '212652517115';
         let selectedProduct = null;
         let selectedReviewRating = 0;
+        const cart = new Map();
         const currentLanguage = 'fr';
 
         const translations = {
@@ -397,6 +453,9 @@
                 quickOrder: 'طلب سريع وتوصيل لجميع أنحاء المغرب', home: 'الرئيسية',
                 allProducts: 'جميع المنتجات', phones: 'الهواتف', laptops: 'الحواسيب المحمولة',
                 accessories: 'الإكسسوارات', tvs: 'التلفزيونات', appliances: 'الأجهزة المنزلية',
+                cart: 'السلة', addToCart: 'أضف إلى السلة', finalizeOrder: 'إتمام الطلب',
+                cartEmpty: 'سلتك فارغة حالياً.', total: 'المجموع',
+                itemAdded: 'تمت إضافة المنتج إلى السلة.',
                 searchLabel: 'بحث', viewCatalog: 'عرض جميع المنتجات',
                 promotionEyebrow: 'اختيارات بأسعار مخفضة', promotions: 'عروض حصرية',
                 heroTitle: 'أفضل الأجهزة بأفضل الأسعار',
@@ -457,6 +516,9 @@
                 quickOrder: 'Commande rapide et livraison partout au Maroc', home: 'Accueil',
                 allProducts: 'Tous les articles', phones: 'Téléphones', laptops: 'Ordinateurs portables',
                 accessories: 'Accessoires', tvs: 'Téléviseurs', appliances: 'Électroménager',
+                cart: 'Panier', addToCart: 'Ajouter au panier', finalizeOrder: 'Finaliser la commande',
+                cartEmpty: 'Votre panier est vide pour le moment.', total: 'Total',
+                itemAdded: 'Article ajouté au panier.',
                 searchLabel: 'Recherche', viewCatalog: 'Voir tout le catalogue',
                 promotionEyebrow: 'Une sélection à prix réduit', promotions: 'Offres du moment',
                 heroTitle: 'Le bon équipement, au bon prix.',
@@ -554,7 +616,7 @@
             if (!detailModal.classList.contains('hidden')) {
                 openProductDetails(Number(document.getElementById('detail-order-button').dataset.productId));
             }
-            if (selectedProduct) updateOrderSummary();
+            if (cart.size) updateOrderSummary();
         }
 
         function openWhatsApp(event, message) {
@@ -630,15 +692,110 @@
             document.body.classList.remove('overflow-hidden');
         }
 
-        function openCheckout(productId) {
-            selectedProduct = products.find(product => product.id === productId);
-            if (!selectedProduct) return;
-            closeProductDetails();
+        function addToCart(productId) {
+            const product = products.find(item => item.id === productId);
+            if (!product) return;
+            const quantity = cart.get(productId) || 0;
+            if (quantity >= 20) {
+                document.getElementById('cart-announcement').textContent = 'Maximum 20 articles par produit.';
+                return;
+            }
+            cart.set(productId, quantity + 1);
+            renderCart();
+            document.getElementById('cart-announcement').textContent = t('itemAdded') + ' ' + product.title;
+        }
 
+        function renderCart() {
+            const items = [...cart.entries()]
+                .map(([productId, quantity]) => ({
+                    product: products.find(item => item.id === productId),
+                    quantity
+                }))
+                .filter(item => item.product);
+            for (const [productId] of cart) {
+                if (!products.some(item => item.id === productId)) cart.delete(productId);
+            }
+            const count = items.reduce((sum, item) => sum + item.quantity, 0);
+            const total = items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+            document.getElementById('mobile-cart-count').textContent = count;
+            document.getElementById('desktop-cart-count').textContent = count;
+            document.getElementById('cart-drawer-count').textContent = count;
+            document.getElementById('cart-total').textContent = formatPrice(total);
+            document.getElementById('checkout-cart-button').disabled = items.length === 0;
+            document.getElementById('cart-items').innerHTML = items.length
+                ? items.map(({ product, quantity }) => `
+                    <article class="flex gap-3 rounded-xl border border-gray-200 p-3">
+                        <img src="${escapeHtml(product.img)}" alt="" class="h-16 w-16 shrink-0 rounded-lg bg-gray-50 object-contain">
+                        <div class="min-w-0 flex-1">
+                            <h3 class="line-clamp-2 text-sm font-semibold text-brand-blue">${escapeHtml(product.title)}</h3>
+                            <p class="mt-1 text-sm font-bold text-brand-orange">${formatPrice(product.price)}</p>
+                            <div class="mt-2 flex items-center justify-between gap-2">
+                                <div class="inline-flex items-center rounded-lg border border-gray-200">
+                                    <button type="button" onclick="changeCartQuantity(${product.id}, -1)" class="flex h-8 w-9 items-center justify-center text-lg text-gray-700 hover:bg-gray-100" aria-label="Diminuer la quantité">−</button>
+                                    <span class="min-w-8 text-center text-sm font-semibold" aria-label="Quantité">${quantity}</span>
+                                    <button type="button" onclick="changeCartQuantity(${product.id}, 1)" class="flex h-8 w-9 items-center justify-center text-lg text-gray-700 hover:bg-gray-100" aria-label="Augmenter la quantité">+</button>
+                                </div>
+                                <button type="button" onclick="removeFromCart(${product.id})" class="text-xs font-semibold text-red-700 underline underline-offset-2" aria-label="Retirer ${escapeHtml(product.title)} du panier">Retirer</button>
+                            </div>
+                        </div>
+                    </article>
+                `).join('')
+                : `<p class="rounded-xl bg-gray-50 p-6 text-center text-sm text-gray-500">${t('cartEmpty')}</p>`;
+        }
+
+        function changeCartQuantity(productId, change) {
+            const quantity = (cart.get(productId) || 0) + change;
+            if (quantity <= 0) cart.delete(productId);
+            else cart.set(productId, Math.min(20, quantity));
+            renderCart();
+        }
+
+        function removeFromCart(productId) {
+            cart.delete(productId);
+            renderCart();
+        }
+
+        function openDrawer(drawerId) {
+            const drawer = document.getElementById(drawerId);
+            const isCategoryDrawer = drawerId === 'category-drawer';
+            const openClass = isCategoryDrawer ? '-translate-x-full' : 'translate-x-full';
+            closeDrawers();
+            drawer.classList.remove(openClass);
+            drawer.setAttribute('aria-hidden', 'false');
+            document.getElementById('drawer-backdrop').setAttribute('aria-hidden', 'false');
+            document.body.classList.add('overflow-hidden');
+            if (isCategoryDrawer) document.getElementById('mobile-menu-button').setAttribute('aria-expanded', 'true');
+        }
+
+        function closeDrawers() {
+            document.getElementById('category-drawer').classList.add('-translate-x-full');
+            document.getElementById('cart-drawer').classList.add('translate-x-full');
+            document.getElementById('category-drawer').setAttribute('aria-hidden', 'true');
+            document.getElementById('cart-drawer').setAttribute('aria-hidden', 'true');
+            document.getElementById('drawer-backdrop').setAttribute('aria-hidden', 'true');
+            document.getElementById('mobile-menu-button').setAttribute('aria-expanded', 'false');
+            const modalOpen = ['checkout-modal', 'product-detail-modal'].some(id =>
+                !document.getElementById(id).classList.contains('hidden')
+            );
+            if (!modalOpen) document.body.classList.remove('overflow-hidden');
+        }
+
+        function toggleMobileSearch() {
+            const panel = document.getElementById('mobile-search-panel');
+            const button = document.getElementById('mobile-search-button');
+            const isOpening = panel.classList.contains('hidden');
+            panel.classList.toggle('hidden', !isOpening);
+            button.setAttribute('aria-expanded', String(isOpening));
+            if (isOpening) document.getElementById('mobile-search-input').focus();
+        }
+
+        function checkoutCart() {
+            if (cart.size === 0) return;
+            closeDrawers();
+            selectedProduct = null;
             const modal = document.getElementById('checkout-modal');
             const message = document.getElementById('checkout-message');
             document.getElementById('checkout-form').reset();
-            document.getElementById('order-quantity').value = '1';
             const submitButton = document.getElementById('submit-order-button');
             submitButton.classList.remove('hidden');
             submitButton.disabled = false;
@@ -662,18 +819,32 @@
         }
 
         function updateOrderSummary() {
-            if (!selectedProduct) return;
-            const quantity = Math.max(1, Math.min(20, Number(document.getElementById('order-quantity').value) || 1));
-            const total = selectedProduct.price * quantity;
-            document.getElementById('order-summary').innerHTML = `
-                <div class="flex items-center justify-between gap-4">
-                    <span><strong>${selectedProduct.title}</strong><br>${formatPrice(selectedProduct.price)} &times; ${quantity}</span>
-                    <strong class="whitespace-nowrap text-brand-blue">${formatPrice(total)}</strong>
+            const items = [...cart.entries()]
+                .map(([productId, quantity]) => ({
+                    product: products.find(item => item.id === productId),
+                    quantity
+                }))
+                .filter(item => item.product);
+            const total = items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+            document.getElementById('order-summary').innerHTML = items.map(({ product, quantity }) => `
+                <div class="flex items-center justify-between gap-4 ${items.length > 1 ? 'border-b border-blue-100 py-2 last:border-0' : ''}">
+                    <span><strong>${escapeHtml(product.title)}</strong><br>${formatPrice(product.price)} &times; ${quantity}</span>
+                    <strong class="whitespace-nowrap text-brand-blue">${formatPrice(product.price * quantity)}</strong>
+                </div>
+            `).join('') + `
+                <div class="mt-3 flex items-center justify-between gap-4 border-t border-blue-200 pt-3 font-bold">
+                    <span>${t('total')}</span><span>${formatPrice(total)}</span>
                 </div>`;
         }
 
         function normalizeText(value) {
             return String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+        }
+
+        function escapeHtml(value) {
+            return String(value).replace(/[&<>"']/g, character => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            })[character]);
         }
 
         function renderSearchResults(query, shouldScroll = false) {
@@ -703,7 +874,12 @@
 
         function searchProducts(event) {
             event.preventDefault();
-            renderSearchResults(document.getElementById('search-input').value.trim(), true);
+            const query = event.currentTarget.querySelector('input[type="search"]').value.trim();
+            document.getElementById('search-input').value = query;
+            document.getElementById('mobile-search-input').value = query;
+            document.getElementById('mobile-search-panel').classList.add('hidden');
+            document.getElementById('mobile-search-button').setAttribute('aria-expanded', 'false');
+            renderSearchResults(query, true);
         }
 
         function showCheckoutMessage(message, isError = false) {
@@ -712,27 +888,38 @@
             element.textContent = message;
         }
 
-        document.getElementById('order-quantity').addEventListener('input', updateOrderSummary);
         document.getElementById('checkout-modal').addEventListener('click', event => {
             if (event.target.id === 'checkout-modal') closeCheckout();
         });
         document.getElementById('checkout-form').addEventListener('submit', async event => {
             event.preventDefault();
-            if (!selectedProduct) return;
+            if (cart.size === 0) return;
 
             const form = event.currentTarget;
             const formData = new FormData(form);
-            const quantity = Math.max(1, Math.min(20, Number(formData.get('quantity')) || 1));
+            const items = [...cart.entries()].map(([productId, quantity]) => {
+                const product = products.find(item => item.id === productId);
+                return product ? {
+                    productId: product.id,
+                    product: product.title,
+                    quantity,
+                    unitPrice: product.price
+                } : null;
+            }).filter(Boolean);
+            if (items.length === 0) return;
+            const quantity = items.reduce((sum, item) => sum + item.quantity, 0);
+            const total = items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
             const order = {
                 firstName: String(formData.get('firstName')).trim(),
                 lastName: String(formData.get('lastName')).trim(),
                 phone: String(formData.get('phone')).trim(),
                 address: String(formData.get('address')).trim(),
-                productId: selectedProduct.id,
-                product: selectedProduct.title,
+                items: items.map(({ productId, quantity }) => ({ productId, quantity })),
+                productId: items.length === 1 ? items[0].productId : null,
+                product: items.map(item => `${item.product} × ${item.quantity}`).join(', '),
                 quantity,
-                unitPrice: selectedProduct.price,
-                total: selectedProduct.price * quantity,
+                unitPrice: items.length === 1 ? items[0].unitPrice : null,
+                total,
                 currency: 'MAD',
                 createdAt: new Date().toISOString()
             };
@@ -741,9 +928,8 @@
                 const messageLabels = t('messages');
                 const message = [
                     messageLabels.whatsappGreeting,
-                    messageLabels.product + ': ' + order.product,
-                    messageLabels.quantity + ': ' + order.quantity,
-                    messageLabels.total + ': ' + formatPrice(order.total),
+                    ...items.map(item => `${item.product} × ${item.quantity} — ${formatPrice(item.unitPrice * item.quantity)}`),
+                    messageLabels.total + ': ' + formatPrice(total),
                     messageLabels.name + ': ' + order.firstName + ' ' + order.lastName,
                     messageLabels.phone + ': ' + order.phone,
                     messageLabels.address + ': ' + order.address
@@ -767,6 +953,8 @@
                 form.reset();
                 showCheckoutMessage(t('messages').sent);
                 submitButton.classList.add('hidden');
+                cart.clear();
+                renderCart();
             } catch (error) {
                 showCheckoutMessage(t('messages').failed, true);
             } finally {
@@ -784,16 +972,16 @@
                     ${product.discount ? `<span class="mb-3 w-fit rounded bg-brand-orange px-2 py-1 text-xs font-bold text-white">-${product.discount}%</span>` : '<span class="mb-3 h-6"></span>'}
                     <button type="button" onclick="openProductDetails(${product.id})" class="block w-full text-start">
                         <div class="mb-4 aspect-square overflow-hidden rounded-lg bg-gray-50">
-                            <img src="${product.img}" alt="${product.title}" loading="lazy" class="h-full w-full object-contain transition duration-300 hover:scale-[1.03]">
+                            <img src="${escapeHtml(product.img)}" alt="${escapeHtml(product.title)}" loading="lazy" class="h-full w-full object-contain transition duration-300 hover:scale-[1.03]">
                         </div>
-                        <span class="text-xs font-semibold uppercase tracking-wide text-gray-500">${product.brand}</span>
-                        <h3 class="mt-1 min-h-12 font-semibold leading-snug text-brand-blue">${product.title}</h3>
+                        <span class="text-xs font-semibold uppercase tracking-wide text-gray-500">${escapeHtml(product.brand)}</span>
+                        <h3 class="mt-1 min-h-12 font-semibold leading-snug text-brand-blue">${escapeHtml(product.title)}</h3>
                         <span class="mt-3 block text-sm text-gray-400 line-through">${product.oldPrice ? formatPrice(product.oldPrice) : ''}</span>
                         <span class="block text-xl font-bold text-brand-blue">${formatPrice(product.price)}</span>
                         <span class="mt-2 inline-block text-sm font-semibold text-brand-blue underline underline-offset-4">${t('details')}</span>
                     </button>
-                    <button type="button" onclick="openCheckout(${product.id})" class="mt-auto w-full rounded-md bg-brand-orange py-2.5 font-bold text-white transition hover:brightness-95">
-                        ${t('order')}
+                    <button type="button" onclick="addToCart(${product.id})" class="mt-auto w-full rounded-md bg-brand-orange py-2.5 font-bold text-white transition hover:brightness-95">
+                        ${t('addToCart')}
                     </button>
                 </article>
             `;
@@ -842,6 +1030,7 @@
                 .reverse();
             document.getElementById('featured-products-container').innerHTML = [...recentProducts, ...featured].map(createProductCard).join('');
             renderPromotions();
+            renderCart();
         }
 
         async function loadManagedCatalog() {
@@ -853,11 +1042,9 @@
                 products.splice(0, products.length, ...catalog);
                 if (selectedProduct) {
                     selectedProduct = catalog.find(product => product.id === selectedProduct.id) || null;
-                    if (selectedProduct && !document.getElementById('checkout-modal').classList.contains('hidden')) {
-                        updateOrderSummary();
-                    }
                 }
                 renderProducts();
+                if (!document.getElementById('checkout-modal').classList.contains('hidden')) updateOrderSummary();
                 if (!document.getElementById('search-results').classList.contains('hidden')) {
                     renderSearchResults(document.getElementById('search-input').value.trim());
                 }
@@ -903,6 +1090,7 @@
         // --- Initialization ---
         document.addEventListener('DOMContentLoaded', () => {
             applyLanguage();
+            renderCart();
             loadManagedCatalog();
             if (location.protocol !== 'file:') {
                 const catalogEvents = new EventSource('/api/catalog-events');
@@ -930,8 +1118,11 @@
             });
             startPromotionRotation();
             document.getElementById('detail-order-button').addEventListener('click', event => {
-                openCheckout(Number(event.currentTarget.dataset.productId));
+                const productId = Number(event.currentTarget.dataset.productId);
+                closeProductDetails();
+                addToCart(productId);
             });
+            document.getElementById('checkout-cart-button').disabled = cart.size === 0;
             document.getElementById('product-detail-modal').addEventListener('click', event => {
                 if (event.target.id === 'product-detail-modal') closeProductDetails();
             });
@@ -939,6 +1130,7 @@
                 if (event.key !== 'Escape') return;
                 if (!document.getElementById('product-detail-modal').classList.contains('hidden')) closeProductDetails();
                 else if (!document.getElementById('checkout-modal').classList.contains('hidden')) closeCheckout();
+                else if (document.getElementById('drawer-backdrop').getAttribute('aria-hidden') === 'false') closeDrawers();
             });
         });
 
