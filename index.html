@@ -35,7 +35,6 @@
         [dir="rtl"] #whatsapp-button { right: auto; left: 1.25rem; }
         [dir="rtl"] .modal-close { right: auto; left: 1rem; }
         [dir="rtl"] #detail-title { padding-right: 0; padding-left: 4rem; }
-        [dir="rtl"] #whatsapp-button i { margin-right: 0; margin-left: 0.5rem; }
     </style>
 </head>
 <body class="text-gray-800">
@@ -45,7 +44,7 @@
         <div class="container mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-1 sm:gap-4">
             <span data-i18n="shipping">توصيل لجميع أنحاء المغرب</span>
             <div class="flex flex-wrap items-center justify-center gap-x-4 gap-y-0">
-                <a href="#" onclick="openWhatsApp(event, 'Salam, bghit ntabe3 talabi.')" class="hover:text-brand-orange" data-i18n="track">تتبع الطلب</a>
+                <a href="#" onclick="contactOrderTracking(event)" class="hover:text-brand-orange" data-i18n="track">تتبع الطلب</a>
                 <a href="#" onclick="openWhatsApp(event)" class="hover:text-brand-orange" data-i18n="contact">اتصل بنا</a>
                 <button id="language-toggle" type="button" onclick="toggleLanguage()" class="inline-flex min-h-9 min-w-9 shrink-0 items-center justify-center gap-1 rounded px-1.5 py-1 text-[11px] font-semibold transition hover:text-brand-orange" aria-label="Passer en français" title="Passer en français">
                     <i class="fa-solid fa-language text-sm" aria-hidden="true"></i><span id="language-toggle-label">FR</span>
@@ -58,7 +57,7 @@
     <header class="bg-brand-blue text-white sticky top-0 z-50 shadow-md">
         <div class="container mx-auto px-4 py-4 flex flex-wrap lg:flex-nowrap items-center justify-between gap-4">
             <!-- Logo -->
-            <div class="flex items-center justify-between w-full lg:w-auto">
+            <div class="flex w-full items-center justify-center lg:w-auto lg:justify-start">
                 <a href="#" onclick="switchTab('accueil')" class="text-2xl font-bold flex items-center gap-2">
                     <img src="assets/az-tech-logo.svg" alt="AZ TECH" class="h-10 w-auto">
                 </a>
@@ -119,6 +118,22 @@
                     <span class="text-sm text-white/75" data-i18n="shipping">توصيل لجميع أنحاء المغرب</span>
                 </div>
             </div>
+
+            <section class="mb-10 grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4" aria-labelledby="trust-title">
+                <h3 id="trust-title" class="sr-only" data-i18n="trustTitle">معلومات تهمك قبل الطلب</h3>
+                <article class="rounded-xl border border-gray-200 border-t-2 border-t-brand-orange bg-white p-4 sm:p-5">
+                    <h4 class="font-bold text-brand-blue" data-i18n="trustShippingTitle">توصيل عبر المغرب</h4>
+                    <p class="mt-1 text-sm leading-6 text-gray-600" data-i18n="trustShippingText">التوصيل متاح لجميع أنحاء المغرب.</p>
+                </article>
+                <article class="rounded-xl border border-gray-200 border-t-2 border-t-brand-orange bg-white p-4 sm:p-5">
+                    <h4 class="font-bold text-brand-blue" data-i18n="trustConfirmTitle">تأكيد واضح للطلب</h4>
+                    <p class="mt-1 text-sm leading-6 text-gray-600" data-i18n="trustConfirmText">نتواصل معك لمراجعة معلوماتك قبل تأكيد الطلب.</p>
+                </article>
+                <article class="rounded-xl border border-gray-200 border-t-2 border-t-brand-orange bg-white p-4 sm:p-5">
+                    <h4 class="font-bold text-brand-blue" data-i18n="trustSupportTitle">تواصل مباشر</h4>
+                    <p class="mt-1 text-sm leading-6 text-gray-600" data-i18n="trustSupportText">اسألنا عبر واتساب عن المنتج والتوفر.</p>
+                </article>
+            </section>
 
             <!-- Categories -->
             <section class="mb-12">
@@ -259,8 +274,8 @@
         </section>
     </div>
 
-    <a id="whatsapp-button" href="https://wa.me/212652517115" onclick="openWhatsApp(event)" target="_blank" rel="noopener" aria-label="تواصل مع AZ TECH عبر واتساب" class="fixed bottom-5 right-5 z-[80] rounded-full bg-green-600 px-5 py-3 font-bold text-white shadow-lg transition hover:bg-green-700">
-        <i class="fab fa-whatsapp mr-2" aria-hidden="true"></i><span data-i18n="whatsapp">واتساب</span>
+    <a id="whatsapp-button" href="https://wa.me/212652517115" onclick="openWhatsApp(event)" target="_blank" rel="noopener" aria-label="تواصل مع AZ TECH عبر واتساب" title="تواصل مع AZ TECH عبر واتساب" class="fixed bottom-4 right-4 z-[80] flex h-14 w-14 items-center justify-center rounded-full bg-green-600 text-white shadow-lg transition duration-200 hover:scale-105 hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-200 sm:bottom-5 sm:right-5">
+        <i class="fab fa-whatsapp text-2xl" aria-hidden="true"></i>
     </a>
 
     <!-- Footer -->
@@ -347,6 +362,13 @@
                 brands: 'علاماتنا التجارية', catalogDescription: 'اختر منتجاً للاطلاع على التفاصيل وإتمام الطلب.',
                 accessoriesDescription: 'سماعات وشواحن وإكسسوارات للاستعمال اليومي.',
                 tvDescription: 'شاشات مناسبة لتجهيز منزلك.', close: 'إغلاق',
+                trustTitle: 'معلومات تهمك قبل الطلب',
+                trustShippingTitle: 'توصيل عبر المغرب',
+                trustShippingText: 'التوصيل متاح لجميع أنحاء المغرب.',
+                trustConfirmTitle: 'تأكيد واضح للطلب',
+                trustConfirmText: 'نتواصل معك لمراجعة معلوماتك قبل تأكيد الطلب.',
+                trustSupportTitle: 'تواصل مباشر',
+                trustSupportText: 'اسألنا عبر واتساب عن المنتج والتوفر.',
                 orderTitle: 'إتمام الطلب', orderInstructions: 'أدخل معلوماتك وسنتواصل معك لتأكيد الطلب.',
                 firstName: 'الاسم الشخصي', lastName: 'النسب', phone: 'رقم الهاتف',
                 address: 'عنوان التوصيل', addressPlaceholder: 'الشارع، الحي، المدينة',
@@ -392,6 +414,13 @@
                 catalogDescription: 'Choisissez un article pour voir les détails et commander.',
                 accessoriesDescription: 'Écouteurs, chargeurs et accessoires du quotidien.',
                 tvDescription: 'Des écrans pour équiper votre salon.', close: 'Fermer',
+                trustTitle: 'Informations avant votre commande',
+                trustShippingTitle: 'Livraison au Maroc',
+                trustShippingText: 'La livraison est disponible partout au Maroc.',
+                trustConfirmTitle: 'Confirmation de commande',
+                trustConfirmText: 'Nous vous contactons pour vérifier les informations avant de confirmer.',
+                trustSupportTitle: 'Contact direct',
+                trustSupportText: 'Posez-nous vos questions sur le produit et sa disponibilité via WhatsApp.',
                 orderTitle: 'Commander',
                 orderInstructions: 'Remplissez vos coordonnées. Nous vous contacterons pour confirmer la commande.',
                 firstName: 'Prénom', lastName: 'Nom', phone: 'Numéro de téléphone',
@@ -459,6 +488,9 @@
                 'aria-label',
                 language === 'ar' ? 'تواصل مع AZ TECH عبر واتساب' : 'Contacter AZ TECH sur WhatsApp'
             );
+            document.getElementById('whatsapp-button').title = language === 'ar'
+                ? 'تواصل مع AZ TECH عبر واتساب'
+                : 'Contacter AZ TECH sur WhatsApp';
 
             renderProducts();
             if (!document.getElementById('search-results').classList.contains('hidden')) {
@@ -475,10 +507,21 @@
             applyLanguage(currentLanguage === 'ar' ? 'fr' : 'ar');
         }
 
-        function openWhatsApp(event, message = 'Salam, bghit n3ref l-articles disponibles.') {
+        function openWhatsApp(event, message) {
             if (event) event.preventDefault();
-            const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+            const defaultMessage = currentLanguage === 'ar'
+                ? 'السلام عليكم، أود الاستفسار عن المنتجات المتاحة.'
+                : 'Bonjour, je souhaite obtenir des informations sur les produits disponibles.';
+            const textMessage = message || defaultMessage;
+            const url = 'https://wa.me/' + WHATSAPP_NUMBER + '?text=' + encodeURIComponent(textMessage);
             window.open(url, '_blank', 'noopener,noreferrer');
+        }
+
+        function contactOrderTracking(event) {
+            const message = currentLanguage === 'ar'
+                ? 'السلام عليكم، أود الاستفسار عن حالة طلبي.'
+                : 'Bonjour, je souhaite connaître le statut de ma commande.';
+            openWhatsApp(event, message);
         }
 
         function openProductDetails(productId) {
