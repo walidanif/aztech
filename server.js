@@ -20,6 +20,7 @@ const CATEGORIES = new Set(['telephones', 'laptops', 'accessoires', 'televiseurs
 const PERMISSIONS = new Set(['products.view', 'products.manage']);
 const sessions = new Map();
 const loginAttempts = new Map();
+const catalogClients = new Set();
 let store;
 let saveQueue = Promise.resolve();
 
@@ -168,6 +169,10 @@ function sendJson(res, status, data) {
     res.end(JSON.stringify(data));
 }
 
+function publishCatalogUpdate() {
+    for (const client of catalogClients) client.write('event: catalog-updated\ndata: {}\n\n');
+}
+
 async function readJson(req, maxBytes = 64 * 1024) {
     const chunks = [];
     let size = 0;
@@ -270,6 +275,23 @@ function parseUserId(value) {
 }
 
 async function handleApi(req, res, url) {
+    if (req.method === 'GET' && url.pathname === '/api/catalog-events') {
+        res.writeHead(200, {
+            'Content-Type': 'text/event-stream; charset=utf-8',
+            'Cache-Control': 'no-cache, no-transform',
+            'Connection': 'keep-alive',
+            'X-Accel-Buffering': 'no'
+        });
+        res.write(': connected\n\n');
+        catalogClients.add(res);
+        const keepAlive = setInterval(() => res.write(': keep-alive\n\n'), 25000);
+        res.on('close', () => {
+            clearInterval(keepAlive);
+            catalogClients.delete(res);
+        });
+        return;
+    }
+
     if (req.method === 'GET' && url.pathname === '/api/products') {
         return sendJson(res, 200, store.products);
     }
@@ -428,6 +450,7 @@ async function handleApi(req, res, url) {
             store.products.push(created);
             audit(user, 'product.create', String(created.id));
             await writeStore();
+            publishCatalogUpdate();
             return sendJson(res, 201, { product: created });
         }
         const productMatch = url.pathname.match(/^\/api\/admin\/products\/(\d+)$/);
@@ -441,6 +464,7 @@ async function handleApi(req, res, url) {
             store.products[index] = updated;
             audit(user, 'product.update', String(updated.id));
             await writeStore();
+            publishCatalogUpdate();
             return sendJson(res, 200, { product: updated });
         }
         if (productMatch && req.method === 'DELETE') {
@@ -451,6 +475,7 @@ async function handleApi(req, res, url) {
             const [removed] = store.products.splice(index, 1);
             audit(user, 'product.delete', String(removed.id));
             await writeStore();
+            publishCatalogUpdate();
             return sendJson(res, 200, { ok: true });
         }
     }

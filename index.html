@@ -834,8 +834,13 @@
                 products.find(p => p.id === 21),
                 products.find(p => p.id === 10),
                 products.find(p => p.id === 17),
-            ];
-            document.getElementById('featured-products-container').innerHTML = featured.map(createProductCard).join('');
+            ].filter(Boolean);
+            const featuredIds = new Set(featured.map(product => product.id));
+            const recentProducts = products
+                .filter(product => !featuredIds.has(product.id))
+                .slice(-4)
+                .reverse();
+            document.getElementById('featured-products-container').innerHTML = [...recentProducts, ...featured].map(createProductCard).join('');
             renderPromotions();
         }
 
@@ -846,7 +851,16 @@
                 const catalog = await response.json();
                 if (!Array.isArray(catalog)) throw new Error('The product catalogue response is invalid.');
                 products.splice(0, products.length, ...catalog);
+                if (selectedProduct) {
+                    selectedProduct = catalog.find(product => product.id === selectedProduct.id) || null;
+                    if (selectedProduct && !document.getElementById('checkout-modal').classList.contains('hidden')) {
+                        updateOrderSummary();
+                    }
+                }
                 renderProducts();
+                if (!document.getElementById('search-results').classList.contains('hidden')) {
+                    renderSearchResults(document.getElementById('search-input').value.trim());
+                }
             } catch (error) {
                 if (location.protocol !== 'file:') console.error('Could not load the managed catalogue:', error);
             }
@@ -890,6 +904,10 @@
         document.addEventListener('DOMContentLoaded', () => {
             applyLanguage();
             loadManagedCatalog();
+            if (location.protocol !== 'file:') {
+                const catalogEvents = new EventSource('/api/catalog-events');
+                catalogEvents.addEventListener('catalog-updated', loadManagedCatalog);
+            }
             const promotionSlider = document.getElementById('promotions-slider');
             const promotionControls = document.querySelector('[aria-labelledby="promotions-title"]');
             let promotionTimer;
