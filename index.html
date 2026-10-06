@@ -326,6 +326,149 @@
         const GOOGLE_SHEETS_WEB_APP_URL = 'PASTE_YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE';
         const WHATSAPP_NUMBER = '212652517115';
         let selectedProduct = null;
+        let currentLanguage = 'ar';
+
+        const translations = {
+            ar: {
+                shipping: 'توصيل لجميع أنحاء المغرب', track: 'تتبع الطلب', contact: 'اتصل بنا',
+                searchPlaceholder: 'ابحث عن منتج أو علامة تجارية...', search: 'بحث',
+                quickOrder: 'طلب سريع وتوصيل لجميع أنحاء المغرب', home: 'الرئيسية',
+                allProducts: 'جميع المنتجات', phones: 'الهواتف', laptops: 'الحواسيب المحمولة',
+                accessories: 'الإكسسوارات', tvs: 'التلفزيونات', appliances: 'الأجهزة المنزلية',
+                searchLabel: 'بحث', viewCatalog: 'عرض جميع المنتجات',
+                heroTitle: 'أفضل الأجهزة بأفضل الأسعار',
+                heroDescription: 'هواتف وحواسيب وتلفزيونات وإكسسوارات. اختر المنتج وأرسل طلبك في خطوات بسيطة.',
+                browseProducts: 'تصفح المنتجات', categories: 'الأصناف', viewAll: 'عرض الكل',
+                featured: 'منتجات مميزة', priceNote: 'يرجى تأكيد السعر والتوفر مع فريقنا.',
+                brands: 'علاماتنا التجارية', catalogDescription: 'اختر منتجاً للاطلاع على التفاصيل وإتمام الطلب.',
+                accessoriesDescription: 'سماعات وشواحن وإكسسوارات للاستعمال اليومي.',
+                tvDescription: 'شاشات مناسبة لتجهيز منزلك.', close: 'إغلاق',
+                orderTitle: 'إتمام الطلب', orderInstructions: 'أدخل معلوماتك وسنتواصل معك لتأكيد الطلب.',
+                firstName: 'الاسم الشخصي', lastName: 'النسب', phone: 'رقم الهاتف',
+                address: 'عنوان التوصيل', addressPlaceholder: 'الشارع، الحي، المدينة',
+                quantity: 'الكمية', cancel: 'إلغاء', sendOrder: 'إرسال الطلب',
+                sending: 'جارٍ إرسال الطلب...', orderThis: 'اطلب هذا المنتج',
+                whatsapp: 'واتساب', footerAbout: 'متجركم للإلكترونيات في المغرب. تصفحوا المنتجات وأرسلوا طلباتكم مباشرة.',
+                whatsappContact: 'التواصل عبر واتساب', writeUs: 'راسلونا',
+                copyright: '© 2026 AZ TECH Maroc. جميع الحقوق محفوظة.',
+                details: 'عرض التفاصيل', order: 'اطلب الآن',
+                noMatch: 'لم يتم العثور على منتجات. جرّب البحث بكلمات أخرى أو تواصل معنا عبر واتساب.',
+                resultsFor: 'نتائج البحث عن «', resultsEnd: '»',
+                genericDescription: 'منتج من {brand} متوفر للطلب لدى AZ TECH.',
+                fallbackDescription: {
+                    13: 'هاتف Samsung Galaxy A55 5G.', 14: 'هاتف iPhone 13 بسعة تخزين 128 جيجابايت.',
+                    15: 'حاسوب محمول Dell Latitude 5420.', 16: 'حاسوب محمول Lenovo IdeaPad Slim 3.',
+                    17: 'سماعات لاسلكية Redmi Buds 5.', 18: 'سماعات JBL Tune 520BT تعمل بالبلوتوث.',
+                    19: 'شاحن Samsung USB-C بقدرة 25 واط.', 20: 'ساعة ذكية X8 بشاشة لمس.',
+                    21: 'تلفزيون Samsung Crystal UHD بحجم 55 بوصة.',
+                    22: 'تلفزيون TCL QLED بحجم 55 بوصة.', 23: 'تلفزيون LG UHD بحجم 50 بوصة.'
+                },
+                messages: {
+                    whatsappOpened: 'فتح واتساب برسالة الطلب. اضغط على إرسال لإتمام الطلب.',
+                    sent: 'شكراً لك! تم إرسال طلبك. سنتواصل معك لتأكيده.',
+                    failed: 'تعذر إرسال الطلب. تحقق من اتصالك بالإنترنت ثم حاول مجدداً.',
+                    whatsappGreeting: 'مرحباً AZ TECH، أريد طلب:',
+                    product: 'المنتج', quantity: 'الكمية', total: 'المجموع',
+                    name: 'الاسم', phone: 'الهاتف', address: 'العنوان'
+                },
+                title: 'AZ TECH - متجرك للإلكترونيات'
+            },
+            fr: {
+                shipping: 'Livraison partout au Maroc', track: 'Suivi de commande', contact: 'Contact',
+                searchPlaceholder: 'Cherchez un produit, une marque...', search: 'Rechercher',
+                quickOrder: 'Commande rapide et livraison partout au Maroc', home: 'Accueil',
+                allProducts: 'Tous les articles', phones: 'Téléphones', laptops: 'Ordinateurs portables',
+                accessories: 'Accessoires', tvs: 'Téléviseurs', appliances: 'Électroménager',
+                searchLabel: 'Recherche', viewCatalog: 'Voir tout le catalogue',
+                heroTitle: 'Le bon équipement, au bon prix.',
+                heroDescription: 'Smartphones, ordinateurs, téléviseurs et accessoires. Choisissez un article et passez commande en quelques étapes.',
+                browseProducts: 'Voir tous les articles', categories: 'Nos catégories', viewAll: 'Voir tout',
+                featured: 'Articles en vente', priceNote: 'Prix et disponibilité à confirmer avec notre équipe.',
+                brands: 'Nos marques partenaires',
+                catalogDescription: 'Choisissez un article pour voir les détails et commander.',
+                accessoriesDescription: 'Écouteurs, chargeurs et accessoires du quotidien.',
+                tvDescription: 'Des écrans pour équiper votre salon.', close: 'Fermer',
+                orderTitle: 'Commander',
+                orderInstructions: 'Remplissez vos coordonnées. Nous vous contacterons pour confirmer la commande.',
+                firstName: 'Prénom', lastName: 'Nom', phone: 'Numéro de téléphone',
+                address: 'Adresse de livraison', addressPlaceholder: 'Rue, quartier, ville',
+                quantity: 'Quantité', cancel: 'Annuler', sendOrder: 'Envoyer ma commande',
+                sending: 'Envoi en cours...', orderThis: 'Commander cet article',
+                whatsapp: 'WhatsApp',
+                footerAbout: 'Votre magasin d’électronique au Maroc. Parcourez les articles et commandez directement en ligne.',
+                whatsappContact: 'Contact WhatsApp', writeUs: 'Écrivez-nous',
+                copyright: '© 2026 AZ TECH Maroc. Tous droits réservés.',
+                details: 'Voir les détails', order: 'Commander',
+                noMatch: 'Aucun article trouvé. Essayez une autre recherche ou contactez-nous sur WhatsApp.',
+                resultsFor: 'Résultats pour « ', resultsEnd: ' »',
+                genericDescription: 'Article {brand} disponible à la commande chez AZ TECH.',
+                fallbackDescription: {}, messages: {
+                    whatsappOpened: 'WhatsApp s’est ouvert avec votre commande. Appuyez sur Envoyer pour nous la transmettre.',
+                    sent: 'Merci ! Votre commande a été transmise. Nous vous contacterons pour la confirmer.',
+                    failed: 'Envoi impossible. Vérifiez votre connexion puis réessayez.',
+                    whatsappGreeting: 'Bonjour AZ TECH, je souhaite commander :',
+                    product: 'Produit', quantity: 'Quantité', total: 'Total',
+                    name: 'Nom', phone: 'Téléphone', address: 'Adresse'
+                },
+                title: 'AZ TECH - Votre magasin d’électronique'
+            }
+        };
+
+        function t(key) {
+            return translations[currentLanguage][key];
+        }
+
+        function formatPrice(amount) {
+            const locale = currentLanguage === 'ar' ? 'ar-MA' : 'fr-MA';
+            const currencyLabel = currentLanguage === 'ar' ? 'د.م.' : 'DH';
+            return Number(amount).toLocaleString(locale) + ' ' + currencyLabel;
+        }
+
+        function productDescription(product) {
+            if (currentLanguage === 'fr') {
+                return product.description || t('genericDescription').replace('{brand}', product.brand);
+            }
+            return translations.ar.fallbackDescription[product.id]
+                || t('genericDescription').replace('{brand}', product.brand);
+        }
+
+        function applyLanguage(language) {
+            currentLanguage = language;
+            document.documentElement.lang = language;
+            document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
+            document.title = t('title');
+            document.querySelectorAll('[data-i18n]').forEach(element => {
+                const value = t(element.dataset.i18n);
+                if (value) element.textContent = value;
+            });
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(element => {
+                const value = t(element.dataset.i18nPlaceholder);
+                if (value) element.placeholder = value;
+            });
+
+            const languageButton = document.getElementById('language-toggle');
+            document.getElementById('language-toggle-label').textContent = language === 'ar' ? 'FR' : 'عربي';
+            languageButton.setAttribute('aria-label', language === 'ar' ? 'Passer en français' : 'التحويل إلى العربية');
+            languageButton.title = language === 'ar' ? 'Passer en français' : 'التحويل إلى العربية';
+            document.getElementById('whatsapp-button').setAttribute(
+                'aria-label',
+                language === 'ar' ? 'تواصل مع AZ TECH عبر واتساب' : 'Contacter AZ TECH sur WhatsApp'
+            );
+
+            renderProducts();
+            if (!document.getElementById('search-results').classList.contains('hidden')) {
+                renderSearchResults(document.getElementById('search-input').value.trim());
+            }
+            const detailModal = document.getElementById('product-detail-modal');
+            if (!detailModal.classList.contains('hidden')) {
+                openProductDetails(Number(document.getElementById('detail-order-button').dataset.productId));
+            }
+            if (selectedProduct) updateOrderSummary();
+        }
+
+        function toggleLanguage() {
+            applyLanguage(currentLanguage === 'ar' ? 'fr' : 'ar');
+        }
 
         function openWhatsApp(event, message = 'Salam, bghit n3ref l-articles disponibles.') {
             if (event) event.preventDefault();
@@ -340,9 +483,9 @@
             document.getElementById('detail-image').alt = product.title;
             document.getElementById('detail-brand').textContent = product.brand;
             document.getElementById('detail-title').textContent = product.title;
-            document.getElementById('detail-description').textContent = product.description || `Article ${product.title}, disponible à la commande chez AZ TECH.`;
-            document.getElementById('detail-old-price').textContent = product.oldPrice ? `${product.oldPrice.toLocaleString('fr-MA')} DH` : '';
-            document.getElementById('detail-price').textContent = `${product.price.toLocaleString('fr-MA')} DH`;
+            document.getElementById('detail-description').textContent = productDescription(product);
+            document.getElementById('detail-old-price').textContent = product.oldPrice ? formatPrice(product.oldPrice) : '';
+            document.getElementById('detail-price').textContent = formatPrice(product.price);
             document.getElementById('detail-order-button').dataset.productId = product.id;
             const modal = document.getElementById('product-detail-modal');
             modal.classList.remove('hidden');
@@ -371,7 +514,7 @@
             const submitButton = document.getElementById('submit-order-button');
             submitButton.classList.remove('hidden');
             submitButton.disabled = false;
-            submitButton.textContent = 'Envoyer ma commande';
+            submitButton.querySelector('[data-i18n="sendOrder"]').textContent = t('sendOrder');
             message.className = 'hidden rounded-md px-3 py-2 text-sm';
             message.textContent = '';
             updateOrderSummary();
@@ -396,8 +539,8 @@
             const total = selectedProduct.price * quantity;
             document.getElementById('order-summary').innerHTML = `
                 <div class="flex items-center justify-between gap-4">
-                    <span><strong>${selectedProduct.title}</strong><br>${selectedProduct.price.toLocaleString('fr-MA')} DH &times; ${quantity}</span>
-                    <strong class="whitespace-nowrap text-brand-blue">${total.toLocaleString('fr-MA')} DH</strong>
+                    <span><strong>${selectedProduct.title}</strong><br>${formatPrice(selectedProduct.price)} &times; ${quantity}</span>
+                    <strong class="whitespace-nowrap text-brand-blue">${formatPrice(total)}</strong>
                 </div>`;
         }
 
@@ -405,9 +548,7 @@
             return String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
         }
 
-        function searchProducts(event) {
-            event.preventDefault();
-            const query = document.getElementById('search-input').value.trim();
+        function renderSearchResults(query, shouldScroll = false) {
             const normalizedQuery = normalizeText(query);
             const matches = normalizedQuery
                 ? products.filter(product => normalizeText(`${product.title} ${product.brand} ${product.category}`).includes(normalizedQuery))
@@ -422,12 +563,19 @@
                 link.classList.add('text-gray-600');
             });
             document.getElementById('search-results').classList.remove('hidden');
-            document.getElementById('search-results-title').textContent = query ? `Résultats pour « ${query} »` : 'Tous les articles';
+            document.getElementById('search-results-title').textContent = query
+                ? t('resultsFor') + query + t('resultsEnd')
+                : t('allProducts');
             const container = document.getElementById('search-results-container');
             container.innerHTML = matches.length
                 ? matches.map(createProductCard).join('')
-                : '<p class="col-span-full rounded-lg border border-gray-200 bg-white p-6 text-gray-600">Aucun article trouvé. Essayez une autre recherche ou contactez-nous sur WhatsApp.</p>';
-            document.getElementById('search-results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                : '<p class="col-span-full rounded-lg border border-gray-200 bg-white p-6 text-gray-600">' + t('noMatch') + '</p>';
+            if (shouldScroll) document.getElementById('search-results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function searchProducts(event) {
+            event.preventDefault();
+            renderSearchResults(document.getElementById('search-input').value.trim(), true);
         }
 
         function showCheckoutMessage(message, isError = false) {
@@ -462,23 +610,24 @@
             };
 
             if (!GOOGLE_SHEETS_WEB_APP_URL.startsWith('https://script.google.com/macros/s/')) {
+                const messageLabels = t('messages');
                 const message = [
-                    'Salam AZ TECH, bghit ncommander:',
-                    `Produit: ${order.product}`,
-                    `Quantite: ${order.quantity}`,
-                    `Total: ${order.total.toLocaleString('fr-MA')} DH`,
-                    `Smiya: ${order.firstName} ${order.lastName}`,
-                    `Telephone: ${order.phone}`,
-                    `Adresse: ${order.address}`
+                    messageLabels.whatsappGreeting,
+                    messageLabels.product + ': ' + order.product,
+                    messageLabels.quantity + ': ' + order.quantity,
+                    messageLabels.total + ': ' + formatPrice(order.total),
+                    messageLabels.name + ': ' + order.firstName + ' ' + order.lastName,
+                    messageLabels.phone + ': ' + order.phone,
+                    messageLabels.address + ': ' + order.address
                 ].join('\n');
                 openWhatsApp(null, message);
-                showCheckoutMessage('WhatsApp s’est ouvert avec votre commande. Appuyez sur Envoyer pour nous la transmettre.');
+                showCheckoutMessage(messageLabels.whatsappOpened);
                 return;
             }
 
             const submitButton = document.getElementById('submit-order-button');
             submitButton.disabled = true;
-            submitButton.textContent = 'Envoi en cours...';
+            submitButton.querySelector('[data-i18n="sendOrder"]').textContent = t('sending');
             try {
                 // Apps Script does not expose CORS headers; no-cors sends the simple POST to doPost.
                 await fetch(GOOGLE_SHEETS_WEB_APP_URL, {
@@ -488,13 +637,15 @@
                     body: JSON.stringify(order)
                 });
                 form.reset();
-                showCheckoutMessage('Merci ! Votre commande a ete transmise. Nous vous contacterons pour la confirmer.');
+                showCheckoutMessage(t('messages').sent);
                 submitButton.classList.add('hidden');
             } catch (error) {
-                showCheckoutMessage('Envoi impossible. Verifiez votre connexion puis reessayez.', true);
+                showCheckoutMessage(t('messages').failed, true);
             } finally {
                 submitButton.disabled = false;
-                if (!submitButton.classList.contains('hidden')) submitButton.textContent = 'Envoyer ma commande';
+                if (!submitButton.classList.contains('hidden')) {
+                    submitButton.querySelector('[data-i18n="sendOrder"]').textContent = t('sendOrder');
+                }
             }
         });
 
@@ -503,18 +654,18 @@
             return `
                 <article class="flex h-full flex-col rounded-xl border border-gray-200 bg-white p-3 shadow-sm transition hover:border-brand-orange hover:shadow-md md:p-4">
                     ${product.discount ? `<span class="mb-3 w-fit rounded bg-brand-orange px-2 py-1 text-xs font-bold text-brand-blue">-${product.discount}%</span>` : '<span class="mb-3 h-6"></span>'}
-                    <button type="button" onclick="openProductDetails(${product.id})" class="block w-full text-left">
+                    <button type="button" onclick="openProductDetails(${product.id})" class="block w-full text-start">
                         <div class="mb-4 aspect-square overflow-hidden rounded-lg bg-gray-50">
                             <img src="${product.img}" alt="${product.title}" loading="lazy" class="h-full w-full object-contain transition duration-300 hover:scale-[1.03]">
                         </div>
                         <span class="text-xs font-semibold uppercase tracking-wide text-gray-500">${product.brand}</span>
                         <h3 class="mt-1 min-h-12 font-semibold leading-snug text-brand-blue">${product.title}</h3>
-                        <span class="mt-3 block text-sm text-gray-400 line-through">${product.oldPrice ? `${product.oldPrice.toLocaleString('fr-MA')} DH` : ''}</span>
-                        <span class="block text-xl font-bold text-brand-blue">${product.price.toLocaleString('fr-MA')} <span class="text-sm">DH</span></span>
-                        <span class="mt-2 inline-block text-sm font-semibold text-brand-blue underline underline-offset-4">Voir les détails</span>
+                        <span class="mt-3 block text-sm text-gray-400 line-through">${product.oldPrice ? formatPrice(product.oldPrice) : ''}</span>
+                        <span class="block text-xl font-bold text-brand-blue">${formatPrice(product.price)}</span>
+                        <span class="mt-2 inline-block text-sm font-semibold text-brand-blue underline underline-offset-4">${t('details')}</span>
                     </button>
                     <button type="button" onclick="openCheckout(${product.id})" class="mt-auto w-full rounded-md bg-brand-orange py-2.5 font-bold text-brand-blue transition hover:brightness-95">
-                        Commander
+                        ${t('order')}
                     </button>
                 </article>
             `;
@@ -574,7 +725,7 @@
 
         // --- Initialization ---
         document.addEventListener('DOMContentLoaded', () => {
-            renderProducts();
+            applyLanguage('ar');
             document.getElementById('detail-order-button').addEventListener('click', event => {
                 openCheckout(Number(event.currentTarget.dataset.productId));
             });
