@@ -1,0 +1,21 @@
+{
+  "functions": {
+    "api/[...path].js": {
+      "includeFiles": "data/products.json"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/admin",
+      "destination": "/admin.html"
+    },
+    {
+      "source": "/admin/",
+      "destination": "/admin.html"
+    },
+    {
+      "source": "/uploads/:path*",
+      "destination": "/api/uploads/:path*"
+    }
+  ]
+}

@@ -1075,6 +1075,8 @@
         }
 
         async function loadManagedCatalog() {
+            if (loadManagedCatalog.pending) return;
+            loadManagedCatalog.pending = true;
             try {
                 const response = await fetch('/api/products', { cache: 'no-store' });
                 if (!response.ok) throw new Error(`Catalogue unavailable (${response.status}).`);
@@ -1091,6 +1093,8 @@
                 }
             } catch (error) {
                 if (location.protocol !== 'file:') console.error('Could not load the managed catalogue:', error);
+            } finally {
+                loadManagedCatalog.pending = false;
             }
         }
 
@@ -1134,8 +1138,27 @@
             renderCart();
             loadManagedCatalog();
             if (location.protocol !== 'file:') {
-                const catalogEvents = new EventSource('/api/catalog-events');
-                catalogEvents.addEventListener('catalog-updated', loadManagedCatalog);
+                window.addEventListener('storage', event => {
+                    if (event.key === 'az-catalog-updated') loadManagedCatalog();
+                });
+                window.addEventListener('focus', loadManagedCatalog);
+                document.addEventListener('visibilitychange', () => {
+                    if (document.visibilityState === 'visible') loadManagedCatalog();
+                });
+                fetch('/api/platform', { cache: 'no-store' })
+                    .then(response => {
+                        if (!response.ok) throw new Error(`Platform settings unavailable (${response.status}).`);
+                        return response.json();
+                    })
+                    .then(({ serverless }) => {
+                        if (serverless) {
+                            window.setInterval(loadManagedCatalog, 2000);
+                            return;
+                        }
+                        const catalogEvents = new EventSource('/api/catalog-events');
+                        catalogEvents.addEventListener('catalog-updated', loadManagedCatalog);
+                    })
+                    .catch(error => console.error('Could not configure catalogue updates:', error));
             }
             const promotionSlider = document.getElementById('promotions-slider');
             const promotionControls = document.querySelector('[aria-labelledby="promotions-title"]');

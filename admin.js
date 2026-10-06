@@ -34,6 +34,14 @@ async function api(url, options = {}) {
     return data;
 }
 
+function notifyCatalogUpdated() {
+    try {
+        localStorage.setItem('az-catalog-updated', String(Date.now()));
+    } catch (error) {
+        console.warn('Could not notify the storefront tab about the catalogue update:', error);
+    }
+}
+
 function formatPrice(value) {
     return new Intl.NumberFormat('fr-MA').format(value) + ' DH';
 }
@@ -256,10 +264,24 @@ async function saveProduct(event) {
                 throw new Error('Choisissez une image PNG, JPEG, WebP ou GIF.');
             }
             if (imageFile.size > 5 * 1024 * 1024) throw new Error('La photo doit faire 5 Mo maximum.');
-            const uploaded = await api('/api/admin/uploads/product-image', {
-                method: 'POST',
-                body: JSON.stringify({ dataUrl: await readImageDataUrl(imageFile) })
-            });
+            const platform = await api('/api/platform');
+            const uploaded = platform.serverless
+                ? await api('/api/admin/uploads/product-image', {
+                    method: 'POST',
+                    body: JSON.stringify({ contentType: imageFile.type })
+                })
+                : await api('/api/admin/uploads/product-image', {
+                    method: 'POST',
+                    body: JSON.stringify({ dataUrl: await readImageDataUrl(imageFile) })
+                });
+            if (uploaded.uploadUrl) {
+                const response = await fetch(uploaded.uploadUrl, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': imageFile.type },
+                    body: imageFile
+                });
+                if (!response.ok) throw new Error('Impossible d’enregistrer la photo dans Supabase.');
+            }
             product.img = uploaded.img;
         }
         if (!product.img) throw new Error('Choisissez une photo pour cet article.');
@@ -269,6 +291,7 @@ async function saveProduct(event) {
         });
         if (id) products = products.map(item => item.id === Number(id) ? result.product : item);
         else products.push(result.product);
+        notifyCatalogUpdated();
         document.getElementById('product-dialog').close();
         renderProducts();
         showMessage('products-message', 'Article enregistré avec succès.');
@@ -286,6 +309,7 @@ async function deleteProduct(productId) {
     try {
         await api(`/api/admin/products/${productId}`, { method: 'DELETE' });
         products = products.filter(item => item.id !== productId);
+        notifyCatalogUpdated();
         renderProducts();
         showMessage('products-message', 'Article supprimé du catalogue.');
     } catch (error) {

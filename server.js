@@ -8,6 +8,7 @@ const { promisify } = require('node:util');
 
 const scrypt = promisify(crypto.scrypt);
 const ROOT = __dirname;
+const IS_VERCEL = Boolean(process.env.VERCEL);
 const DATA_DIR = path.resolve(process.env.AZ_DATA_DIR || path.join(ROOT, 'data'));
 const STORE_FILE = path.join(DATA_DIR, 'store.json');
 const SEED_FILE = path.join(ROOT, 'data', 'products.json');
@@ -23,6 +24,56 @@ const loginAttempts = new Map();
 const catalogClients = new Set();
 let store;
 let saveQueue = Promise.resolve();
+
+function supabaseConfig() {
+    const url = process.env.SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!url || !key) throw new Error('Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in the Vercel project environment variables.');
+    return { url: url.replace(/\/+$/, ''), key };
+}
+
+async function supabaseRequest(resource, options = {}) {
+    const { url, key } = supabaseConfig();
+    const response = await fetch(`${url}/rest/v1/${resource}`, {
+        ...options,
+        headers: {
+            apikey: key,
+            Authorization: `Bearer ${key}`,
+            ...(options.body ? { 'Content-Type': 'application/json' } : {}),
+            ...options.headers
+        }
+    });
+    if (!response.ok) {
+        const detail = await response.text();
+        throw new Error(`Supabase request failed (${response.status}): ${detail.slice(0, 300)}`);
+    }
+    if (response.status === 204) return null;
+    return response.json();
+}
+
+async function createSupabaseImageUpload(filename) {
+    const { url, key } = supabaseConfig();
+    const response = await fetch(`${url}/storage/v1/object/upload/sign/product-images/${filename}`, {
+        method: 'POST',
+        headers: {
+            apikey: key,
+            Authorization: `Bearer ${key}`,
+            'Content-Type': 'application/json'
+        },
+        body: '{}'
+    });
+    if (!response.ok) {
+        const detail = await response.text();
+        throw new Error(`Could not create a signed image upload (${response.status}): ${detail.slice(0, 300)}`);
+    }
+    const result = await response.json();
+    const signedPath = result.url || result.signedURL;
+    if (!signedPath) throw new Error('Supabase did not return a signed image upload URL.');
+    const uploadUrl = /^https?:\/\//i.test(signedPath)
+        ? signedPath
+        : `${url}/storage/v1${signedPath.startsWith('/') ? signedPath : `/${signedPath}`}`;
+    return { uploadUrl, img: `uploads/${filename}` };
+}
 
 function normalizedUsername(value) {
     return String(value || '').trim().toLowerCase();
@@ -61,16 +112,38 @@ function hasPermission(user, permission) {
 }
 
 function writeStore() {
-    const snapshot = JSON.stringify(store, null, 2);
     saveQueue = saveQueue.then(async () => {
+        if (IS_VERCEL) {
+            await supabaseRequest('az_store?on_conflict=id', {
+                method: 'POST',
+                headers: { Prefer: 'resolution=merge-duplicates,return=minimal' },
+                body: JSON.stringify({ id: 1, data: store, updated_at: new Date().toISOString() })
+            });
+            return;
+        }
         const tempFile = STORE_FILE + '.tmp';
-        await fs.writeFile(tempFile, snapshot, { mode: 0o600 });
+        await fs.writeFile(tempFile, JSON.stringify(store, null, 2), { mode: 0o600 });
         await fs.rename(tempFile, STORE_FILE);
     });
     return saveQueue;
 }
 
 async function initializeStore() {
+    if (IS_VERCEL) {
+        const rows = await supabaseRequest('az_store?id=eq.1&select=data');
+        if (rows.length) {
+            store = rows[0].data;
+            if (!Array.isArray(store.products) || !Array.isArray(store.users) || !Array.isArray(store.audit)) {
+                throw new Error('The Supabase az_store row has an invalid format.');
+            }
+            if (store.users.length === 0) await bootstrapAdmin();
+            return;
+        }
+        store = { products: JSON.parse(await fs.readFile(SEED_FILE, 'utf8')), users: [], audit: [] };
+        await bootstrapAdmin();
+        return;
+    }
+
     await fs.mkdir(DATA_DIR, { recursive: true });
     try {
         store = JSON.parse(await fs.readFile(STORE_FILE, 'utf8'));
@@ -90,7 +163,9 @@ async function initializeStore() {
 
 async function bootstrapAdmin() {
     const username = 'admin';
-    const password = 'admin';
+    const password = IS_VERCEL ? process.env.ADMIN_INITIAL_PASSWORD : 'admin';
+    if (!password) throw new Error('Set ADMIN_INITIAL_PASSWORD in Vercel before the first deployment.');
+    if (IS_VERCEL) validatePassword(password);
     const credentials = await hashPassword(password);
     store.users.push({
         id: crypto.randomUUID(),
@@ -103,7 +178,9 @@ async function bootstrapAdmin() {
         createdAt: new Date().toISOString()
     });
     await writeStore();
-    console.warn('Created temporary administrator admin/admin. Keep this server private until the password is changed.');
+    console.warn(IS_VERCEL
+        ? 'Created the initial Vercel administrator. Change the temporary password after signing in.'
+        : 'Created temporary administrator admin/admin. Keep this server private until the password is changed.');
 }
 
 function validateUsername(username) {
@@ -189,7 +266,7 @@ async function readJson(req, maxBytes = 64 * 1024) {
 }
 
 function setSessionCookie(res, token, maxAge = Math.floor(SESSION_TTL_MS / 1000)) {
-    const secure = process.env.COOKIE_SECURE === 'true' ? '; Secure' : '';
+    const secure = IS_VERCEL || process.env.COOKIE_SECURE === 'true' ? '; Secure' : '';
     res.setHeader(
         'Set-Cookie',
         `az_session=${token}; HttpOnly; SameSite=Strict; Path=/api/admin; Max-Age=${maxAge}${secure}`
@@ -220,19 +297,54 @@ function decodeImageData(data) {
     return { bytes, extension };
 }
 
-function requestUser(req) {
+function sessionToken(req) {
     const cookie = req.headers.cookie || '';
-    const token = cookie.split(';').map(part => part.trim()).find(part => part.startsWith('az_session='))
+    return cookie.split(';').map(part => part.trim()).find(part => part.startsWith('az_session='))
         ?.slice('az_session='.length);
-    const session = token && sessions.get(hashToken(token));
+}
+
+async function saveSession(token, userId, expiresAt) {
+    const tokenHash = hashToken(token);
+    if (IS_VERCEL) {
+        await supabaseRequest('az_sessions', {
+            method: 'POST',
+            headers: { Prefer: 'return=minimal' },
+            body: JSON.stringify({ token_hash: tokenHash, user_id: userId, expires_at: new Date(expiresAt).toISOString() })
+        });
+        return;
+    }
+    sessions.set(tokenHash, { userId, expiresAt });
+}
+
+async function deleteSession(token) {
+    if (!token) return;
+    const tokenHash = hashToken(token);
+    if (IS_VERCEL) {
+        await supabaseRequest(`az_sessions?token_hash=eq.${tokenHash}`, { method: 'DELETE' });
+        return;
+    }
+    sessions.delete(tokenHash);
+}
+
+async function requestUser(req) {
+    const token = sessionToken(req);
+    if (!token) return null;
+    let session;
+    if (IS_VERCEL) {
+        const rows = await supabaseRequest(`az_sessions?token_hash=eq.${hashToken(token)}&select=user_id,expires_at`);
+        if (!rows.length) return null;
+        session = { userId: rows[0].user_id, expiresAt: Date.parse(rows[0].expires_at) };
+    } else {
+        session = sessions.get(hashToken(token));
+    }
     if (!session) return null;
     if (session.expiresAt <= Date.now()) {
-        sessions.delete(hashToken(token));
+        await deleteSession(token);
         return null;
     }
     const user = store.users.find(item => item.id === session.userId);
     if (!user || !user.isActive) {
-        sessions.delete(hashToken(token));
+        await deleteSession(token);
         return null;
     }
     return user;
@@ -263,7 +375,11 @@ function audit(actor, action, subject) {
     if (store.audit.length > 500) store.audit.splice(0, store.audit.length - 500);
 }
 
-function revokeUserSessions(userId) {
+async function revokeUserSessions(userId) {
+    if (IS_VERCEL) {
+        await supabaseRequest(`az_sessions?user_id=eq.${encodeURIComponent(userId)}`, { method: 'DELETE' });
+        return;
+    }
     for (const [tokenHash, session] of sessions) {
         if (session.userId === userId) sessions.delete(tokenHash);
     }
@@ -275,7 +391,15 @@ function parseUserId(value) {
 }
 
 async function handleApi(req, res, url) {
+    if (req.method === 'GET' && url.pathname === '/api/platform') {
+        return sendJson(res, 200, { serverless: IS_VERCEL });
+    }
+
     if (req.method === 'GET' && url.pathname === '/api/catalog-events') {
+        if (IS_VERCEL) {
+            res.writeHead(204, { 'Cache-Control': 'no-store' });
+            return res.end();
+        }
         res.writeHead(200, {
             'Content-Type': 'text/event-stream; charset=utf-8',
             'Cache-Control': 'no-cache, no-transform',
@@ -313,7 +437,7 @@ async function handleApi(req, res, url) {
         }
         loginAttempts.delete(ip);
         const token = crypto.randomBytes(32).toString('hex');
-        sessions.set(hashToken(token), { userId: user.id, expiresAt: now + SESSION_TTL_MS });
+        await saveSession(token, user.id, now + SESSION_TTL_MS);
         setSessionCookie(res, token);
         res.writeHead(200, {
             'Content-Type': 'application/json; charset=utf-8',
@@ -323,7 +447,7 @@ async function handleApi(req, res, url) {
     }
 
     if (url.pathname.startsWith('/api/admin/')) {
-        const user = requestUser(req);
+        const user = await requestUser(req);
         if (!user) throw httpError(401, 'Please sign in again.');
         if (req.method !== 'GET') requireSameOrigin(req);
 
@@ -333,7 +457,7 @@ async function handleApi(req, res, url) {
         if (req.method === 'POST' && url.pathname === '/api/admin/logout') {
             const token = (req.headers.cookie || '').split(';').map(part => part.trim())
                 .find(part => part.startsWith('az_session='))?.slice('az_session='.length);
-            if (token) sessions.delete(hashToken(token));
+            await deleteSession(token);
             setSessionCookie(res, '', 0);
             res.writeHead(200, {
                 'Content-Type': 'application/json; charset=utf-8',
@@ -354,9 +478,9 @@ async function handleApi(req, res, url) {
             await writeStore();
             const oldToken = (req.headers.cookie || '').split(';').map(part => part.trim())
                 .find(part => part.startsWith('az_session='))?.slice('az_session='.length);
-            if (oldToken) sessions.delete(hashToken(oldToken));
+            await deleteSession(oldToken);
             const newToken = crypto.randomBytes(32).toString('hex');
-            sessions.set(hashToken(newToken), { userId: user.id, expiresAt: Date.now() + SESSION_TTL_MS });
+            await saveSession(newToken, user.id, Date.now() + SESSION_TTL_MS);
             setSessionCookie(res, newToken);
             res.writeHead(200, {
                 'Content-Type': 'application/json; charset=utf-8',
@@ -426,13 +550,20 @@ async function handleApi(req, res, url) {
             }
             audit(user, 'user.update', target.username);
             await writeStore();
-            if (!target.isActive) revokeUserSessions(target.id);
+            if (!target.isActive) await revokeUserSessions(target.id);
             return sendJson(res, 200, { user: publicUser(target) });
         }
 
         if (req.method === 'POST' && url.pathname === '/api/admin/uploads/product-image') {
             if (user.forcePasswordChange) throw httpError(403, 'Change the temporary password before using the administration panel.');
             requirePermission(user, 'products.manage');
+            if (IS_VERCEL) {
+                const data = await readJson(req);
+                const extension = { 'image/png': '.png', 'image/jpeg': '.jpg', 'image/webp': '.webp', 'image/gif': '.gif' }[data.contentType];
+                if (!extension) throw httpError(400, 'Use a PNG, JPEG, WebP, or GIF image.');
+                const filename = `${crypto.randomUUID()}${extension}`;
+                return sendJson(res, 200, await createSupabaseImageUpload(filename));
+            }
             const { bytes, extension } = decodeImageData(await readJson(req, 7 * 1024 * 1024));
             const filename = `${crypto.randomUUID()}${extension}`;
             await fs.mkdir(PRODUCT_IMAGES_DIR, { recursive: true });
@@ -480,6 +611,12 @@ async function handleApi(req, res, url) {
         }
     }
 
+    const uploadMatch = url.pathname.match(/^\/api\/uploads\/([0-9a-f-]{36}\.(?:png|jpg|webp|gif))$/i);
+    if (uploadMatch && (req.method === 'GET' || req.method === 'HEAD')) {
+        url.pathname = `/uploads/${uploadMatch[1]}`;
+        return serveStatic(req, res, url);
+    }
+
     throw httpError(404, 'API endpoint not found.');
 }
 
@@ -510,6 +647,14 @@ async function serveStatic(req, res, url) {
     if (pathname.startsWith('/uploads/')) {
         const filename = pathname.slice('/uploads/'.length);
         if (!/^[0-9a-f-]{36}\.(png|jpg|webp|gif)$/i.test(filename)) throw httpError(404, 'Not found.');
+        if (IS_VERCEL) {
+            const { url: supabaseUrl } = supabaseConfig();
+            res.writeHead(302, {
+                Location: `${supabaseUrl}/storage/v1/object/public/product-images/${filename}`,
+                'Cache-Control': 'public, max-age=3600'
+            });
+            return res.end();
+        }
         filePath = path.join(PRODUCT_IMAGES_DIR, filename);
     } else {
         const publicPage = new Set(['/index.html', '/admin.html', '/admin.js']);
@@ -538,6 +683,7 @@ async function handleRequest(req, res) {
     try {
         const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
         if (url.pathname.startsWith('/api/')) {
+            if (IS_VERCEL) await initializeStore();
             await handleApi(req, res, url);
         } else {
             await serveStatic(req, res, url);
@@ -562,7 +708,11 @@ async function main() {
     });
 }
 
-main().catch(error => {
-    console.error('Could not start AZ TECH:', error.message);
-    process.exitCode = 1;
-});
+if (require.main === module) {
+    main().catch(error => {
+        console.error('Could not start AZ TECH:', error.message);
+        process.exitCode = 1;
+    });
+}
+
+module.exports = { handleRequest };
