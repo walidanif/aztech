@@ -9,6 +9,10 @@
   },
   "rewrites": [
     {
+      "source": "/api/admin/:resource/:id",
+      "destination": "/api/admin-resource?resource=:resource&id=:id"
+    },
+    {
       "source": "/admin",
       "destination": "/admin.html"
     },
