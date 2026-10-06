@@ -179,13 +179,31 @@
             <!-- Categories -->
             <section class="mb-10">
                 <h3 class="text-xl font-bold mb-6 border-b-2 border-brand-orange inline-block pb-1" data-i18n="categories">الأصناف</h3>
-                <div class="grid grid-cols-2 gap-3 text-start sm:grid-cols-3 lg:grid-cols-6">
-                    <button onclick="switchTab('telephones')" class="rounded-lg border border-gray-200 bg-white p-4 text-start font-semibold text-brand-blue shadow-sm transition hover:border-brand-orange" data-i18n="phones">الهواتف</button>
-                    <button onclick="switchTab('laptops')" class="rounded-lg border border-gray-200 bg-white p-4 text-start font-semibold text-brand-blue shadow-sm transition hover:border-brand-orange" data-i18n="laptops">الحواسيب المحمولة</button>
-                    <button onclick="switchTab('accessoires')" class="rounded-lg border border-gray-200 bg-white p-4 text-start font-semibold text-brand-blue shadow-sm transition hover:border-brand-orange" data-i18n="accessories">الإكسسوارات</button>
-                    <button onclick="switchTab('televiseurs')" class="rounded-lg border border-gray-200 bg-white p-4 text-start font-semibold text-brand-blue shadow-sm transition hover:border-brand-orange" data-i18n="tvs">التلفزيونات</button>
-                    <button onclick="switchTab('electromenagers')" class="rounded-lg border border-gray-200 bg-white p-4 text-start font-semibold text-brand-blue shadow-sm transition hover:border-brand-orange" data-i18n="appliances">الأجهزة المنزلية</button>
-                    <button onclick="switchTab('catalogue')" class="rounded-lg border border-gray-200 bg-white p-4 text-start font-semibold text-brand-blue shadow-sm transition hover:border-brand-orange" data-i18n="viewAll">عرض الكل</button>
+                <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+                    <button onclick="switchTab('telephones')" class="group flex min-h-28 flex-col items-center justify-center gap-3 rounded-xl border border-gray-200 bg-white p-4 text-center font-semibold text-brand-blue shadow-sm transition hover:-translate-y-0.5 hover:border-brand-orange hover:shadow-md">
+                        <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-red-50 text-xl text-brand-orange transition group-hover:bg-brand-orange group-hover:text-white"><i class="fa-solid fa-mobile-screen-button" aria-hidden="true"></i></span>
+                        <span data-i18n="phones">الهواتف</span>
+                    </button>
+                    <button onclick="switchTab('laptops')" class="group flex min-h-28 flex-col items-center justify-center gap-3 rounded-xl border border-gray-200 bg-white p-4 text-center font-semibold text-brand-blue shadow-sm transition hover:-translate-y-0.5 hover:border-brand-orange hover:shadow-md">
+                        <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-red-50 text-xl text-brand-orange transition group-hover:bg-brand-orange group-hover:text-white"><i class="fa-solid fa-laptop" aria-hidden="true"></i></span>
+                        <span data-i18n="laptops">الحواسيب المحمولة</span>
+                    </button>
+                    <button onclick="switchTab('accessoires')" class="group flex min-h-28 flex-col items-center justify-center gap-3 rounded-xl border border-gray-200 bg-white p-4 text-center font-semibold text-brand-blue shadow-sm transition hover:-translate-y-0.5 hover:border-brand-orange hover:shadow-md">
+                        <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-red-50 text-xl text-brand-orange transition group-hover:bg-brand-orange group-hover:text-white"><i class="fa-solid fa-headphones" aria-hidden="true"></i></span>
+                        <span data-i18n="accessories">الإكسسوارات</span>
+                    </button>
+                    <button onclick="switchTab('televiseurs')" class="group flex min-h-28 flex-col items-center justify-center gap-3 rounded-xl border border-gray-200 bg-white p-4 text-center font-semibold text-brand-blue shadow-sm transition hover:-translate-y-0.5 hover:border-brand-orange hover:shadow-md">
+                        <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-red-50 text-xl text-brand-orange transition group-hover:bg-brand-orange group-hover:text-white"><i class="fa-solid fa-tv" aria-hidden="true"></i></span>
+                        <span data-i18n="tvs">التلفزيونات</span>
+                    </button>
+                    <button onclick="switchTab('electromenagers')" class="group flex min-h-28 flex-col items-center justify-center gap-3 rounded-xl border border-gray-200 bg-white p-4 text-center font-semibold text-brand-blue shadow-sm transition hover:-translate-y-0.5 hover:border-brand-orange hover:shadow-md">
+                        <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-red-50 text-xl text-brand-orange transition group-hover:bg-brand-orange group-hover:text-white"><i class="fa-solid fa-blender" aria-hidden="true"></i></span>
+                        <span data-i18n="appliances">الأجهزة المنزلية</span>
+                    </button>
+                    <button onclick="switchTab('catalogue')" class="group flex min-h-28 flex-col items-center justify-center gap-3 rounded-xl border border-gray-200 bg-white p-4 text-center font-semibold text-brand-blue shadow-sm transition hover:-translate-y-0.5 hover:border-brand-orange hover:shadow-md">
+                        <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-red-50 text-xl text-brand-orange transition group-hover:bg-brand-orange group-hover:text-white"><i class="fa-solid fa-border-all" aria-hidden="true"></i></span>
+                        <span data-i18n="viewAll">عرض الكل</span>
+                    </button>
                 </div>
             </section>
 
@@ -444,6 +462,8 @@
         let selectedProduct = null;
         let selectedReviewRating = 0;
         const cart = new Map();
+        let checkoutItems = [];
+        let checkoutFromCart = false;
         const currentLanguage = 'fr';
 
         const translations = {
@@ -789,10 +809,12 @@
             if (isOpening) document.getElementById('mobile-search-input').focus();
         }
 
-        function checkoutCart() {
-            if (cart.size === 0) return;
+        function openOrderCheckout(items, fromCart) {
+            if (items.length === 0) return;
             closeDrawers();
             selectedProduct = null;
+            checkoutItems = items;
+            checkoutFromCart = fromCart;
             const modal = document.getElementById('checkout-modal');
             const message = document.getElementById('checkout-message');
             document.getElementById('checkout-form').reset();
@@ -810,6 +832,16 @@
             document.querySelector('#checkout-form [name="firstName"]').focus();
         }
 
+        function checkoutCart() {
+            openOrderCheckout([...cart.entries()], true);
+        }
+
+        function checkoutProduct(productId) {
+            if (!products.some(product => product.id === productId)) return;
+            closeProductDetails();
+            openOrderCheckout([[productId, 1]], false);
+        }
+
         function closeCheckout() {
             const modal = document.getElementById('checkout-modal');
             modal.classList.add('hidden');
@@ -819,7 +851,7 @@
         }
 
         function updateOrderSummary() {
-            const items = [...cart.entries()]
+            const items = checkoutItems
                 .map(([productId, quantity]) => ({
                     product: products.find(item => item.id === productId),
                     quantity
@@ -893,11 +925,11 @@
         });
         document.getElementById('checkout-form').addEventListener('submit', async event => {
             event.preventDefault();
-            if (cart.size === 0) return;
+            if (checkoutItems.length === 0) return;
 
             const form = event.currentTarget;
             const formData = new FormData(form);
-            const items = [...cart.entries()].map(([productId, quantity]) => {
+            const items = checkoutItems.map(([productId, quantity]) => {
                 const product = products.find(item => item.id === productId);
                 return product ? {
                     productId: product.id,
@@ -953,8 +985,12 @@
                 form.reset();
                 showCheckoutMessage(t('messages').sent);
                 submitButton.classList.add('hidden');
-                cart.clear();
-                renderCart();
+                if (checkoutFromCart) {
+                    cart.clear();
+                    renderCart();
+                }
+                checkoutItems = [];
+                checkoutFromCart = false;
             } catch (error) {
                 showCheckoutMessage(t('messages').failed, true);
             } finally {
@@ -980,9 +1016,14 @@
                         <span class="block text-xl font-bold text-brand-blue">${formatPrice(product.price)}</span>
                         <span class="mt-2 inline-block text-sm font-semibold text-brand-blue underline underline-offset-4">${t('details')}</span>
                     </button>
-                    <button type="button" onclick="addToCart(${product.id})" class="mt-auto w-full rounded-md bg-brand-orange py-2.5 font-bold text-white transition hover:brightness-95">
-                        ${t('addToCart')}
-                    </button>
+                    <div class="mt-auto grid gap-2 pt-4">
+                        <button type="button" onclick="addToCart(${product.id})" class="flex w-full items-center justify-center gap-2 rounded-lg border-2 border-brand-orange bg-white px-3 py-2.5 font-bold text-brand-orange transition hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-200">
+                            <i class="fa-solid fa-cart-plus" aria-hidden="true"></i>${t('addToCart')}
+                        </button>
+                        <button type="button" onclick="checkoutProduct(${product.id})" class="flex w-full items-center justify-center gap-2 rounded-lg bg-brand-orange px-3 py-2.5 font-bold text-white transition hover:brightness-95 focus:outline-none focus:ring-2 focus:ring-red-200">
+                            <i class="fa-solid fa-bolt" aria-hidden="true"></i>${t('order')}
+                        </button>
+                    </div>
                 </article>
             `;
         }
