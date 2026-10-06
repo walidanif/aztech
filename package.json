@@ -1,0 +1,12 @@
+{
+  "name": "az-tech-store",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AZ TECH storefront and secure administration",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

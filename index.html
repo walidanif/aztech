@@ -839,6 +839,19 @@
             renderPromotions();
         }
 
+        async function loadManagedCatalog() {
+            try {
+                const response = await fetch('/api/products', { cache: 'no-store' });
+                if (!response.ok) throw new Error(`Catalogue unavailable (${response.status}).`);
+                const catalog = await response.json();
+                if (!Array.isArray(catalog)) throw new Error('The product catalogue response is invalid.');
+                products.splice(0, products.length, ...catalog);
+                renderProducts();
+            } catch (error) {
+                if (location.protocol !== 'file:') console.error('Could not load the managed catalogue:', error);
+            }
+        }
+
         function movePromotionSlider(direction) {
             const slider = document.getElementById('promotions-slider');
             const card = slider.querySelector(':scope > div');
@@ -876,6 +889,7 @@
         // --- Initialization ---
         document.addEventListener('DOMContentLoaded', () => {
             applyLanguage();
+            loadManagedCatalog();
             const promotionSlider = document.getElementById('promotions-slider');
             const promotionControls = document.querySelector('[aria-labelledby="promotions-title"]');
             let promotionTimer;

@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="theme-color" content="#101012">
+    <title>Administration | AZ TECH Maroc</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: { brand: { blue: '#101012', light: '#29292D', orange: '#E5091B', silver: '#B7B9BE' } }
+                }
+            }
+        };
+    </script>
+    <style>
+        body { font-family: Inter, sans-serif; background: #f5f5f6; }
+        button, a { -webkit-tap-highlight-color: transparent; }
+        .admin-tab[aria-current="page"] { color: #e5091b; border-color: #e5091b; background: #fff; }
+    </style>
+</head>
+<body class="min-h-screen text-gray-800">
+    <header class="border-b border-white/10 bg-brand-blue text-white">
+        <div class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
+            <a href="/" class="flex items-center gap-3" aria-label="AZ TECH, boutique">
+                <img src="/assets/az-tech-logo.png" class="h-12 w-[4.5rem] object-contain" alt="Logo AZ TECH">
+                <span class="hidden border-l border-white/20 pl-3 text-sm font-semibold text-white/80 sm:block">Espace administration</span>
+            </a>
+            <div id="admin-header-user" class="hidden items-center gap-3">
+                <span id="admin-username" class="text-sm text-white/80"></span>
+                <button id="account-button" type="button" class="rounded-lg border border-white/20 px-4 py-2 text-sm font-semibold transition hover:bg-white/10">Mon compte</button>
+                <button id="logout-button" type="button" class="rounded-lg border border-white/20 px-4 py-2 text-sm font-semibold transition hover:bg-white/10">Déconnexion</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <section id="login-view" class="mx-auto mt-8 max-w-md rounded-2xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8" aria-labelledby="login-title">
+            <p class="text-sm font-semibold uppercase tracking-[0.14em] text-brand-orange">AZ TECH Maroc</p>
+            <h1 id="login-title" class="mt-2 text-2xl font-bold text-brand-blue">Connexion admin</h1>
+            <p class="mt-2 text-sm leading-6 text-gray-600">Accédez à la gestion du catalogue et des comptes autorisés.</p>
+            <form id="login-form" class="mt-6 space-y-4">
+                <label class="block text-sm font-semibold text-gray-700">Nom d’utilisateur
+                    <input name="username" autocomplete="username" required minlength="3" maxlength="40" class="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2.5 text-base font-normal lowercase focus:border-brand-orange focus:outline-none focus:ring-2 focus:ring-red-100">
+                </label>
+                <label class="block text-sm font-semibold text-gray-700">Mot de passe
+                    <input name="password" type="password" autocomplete="current-password" required class="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2.5 text-base font-normal focus:border-brand-orange focus:outline-none focus:ring-2 focus:ring-red-100">
+                </label>
+                <p id="login-error" class="hidden rounded-lg bg-red-50 p-3 text-sm text-red-700" role="alert"></p>
+                <button id="login-submit" type="submit" class="w-full rounded-lg bg-brand-orange px-5 py-3 font-bold text-white transition hover:brightness-95 disabled:cursor-wait disabled:opacity-70">Se connecter</button>
+            </form>
+            <a href="/" class="mt-6 inline-block text-sm font-semibold text-gray-600 underline decoration-gray-300 underline-offset-4 hover:text-brand-orange">Retour à la boutique</a>
+        </section>
+
+        <section id="account-view" class="mx-auto mt-8 hidden max-w-xl rounded-2xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8" aria-labelledby="account-title">
+            <p id="account-security-label" class="text-sm font-semibold uppercase tracking-[0.14em] text-brand-orange">Compte sécurisé</p>
+            <h1 id="account-title" class="mt-2 text-2xl font-bold text-brand-blue">Changer mon mot de passe</h1>
+            <p id="account-description" class="mt-2 text-sm leading-6 text-gray-600">Choisissez un nouveau mot de passe d’au moins 12 caractères.</p>
+            <form id="password-form" class="mt-6 space-y-4">
+                <label class="block text-sm font-semibold text-gray-700">Mot de passe actuel
+                    <input name="currentPassword" type="password" autocomplete="current-password" required class="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2.5 text-base font-normal focus:border-brand-orange focus:outline-none focus:ring-2 focus:ring-red-100">
+                </label>
+                <label class="block text-sm font-semibold text-gray-700">Nouveau mot de passe
+                    <input name="newPassword" type="password" autocomplete="new-password" required minlength="12" maxlength="200" class="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2.5 text-base font-normal focus:border-brand-orange focus:outline-none focus:ring-2 focus:ring-red-100">
+                </label>
+                <label class="block text-sm font-semibold text-gray-700">Confirmer le nouveau mot de passe
+                    <input name="confirmPassword" type="password" autocomplete="new-password" required minlength="12" maxlength="200" class="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2.5 text-base font-normal focus:border-brand-orange focus:outline-none focus:ring-2 focus:ring-red-100">
+                </label>
+                <p id="password-message" class="hidden rounded-lg p-3 text-sm" role="status" aria-live="polite"></p>
+                <div class="flex flex-wrap gap-3">
+                    <button type="submit" class="rounded-lg bg-brand-orange px-5 py-3 font-bold text-white transition hover:brightness-95">Enregistrer le nouveau mot de passe</button>
+                    <button id="cancel-account-button" type="button" class="hidden rounded-lg border border-gray-300 px-5 py-3 font-semibold text-gray-700 transition hover:bg-gray-50">Retour au tableau de bord</button>
+                </div>
+            </form>
+        </section>
+
+        <section id="dashboard-view" class="hidden space-y-6">
+            <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+                <div>
+                    <p class="text-sm font-semibold uppercase tracking-[0.14em] text-brand-orange">Espace sécurisé</p>
+                    <h1 class="mt-1 text-3xl font-extrabold text-brand-blue">Tableau de bord</h1>
+                    <p class="mt-2 text-sm text-gray-600">Gérez votre catalogue et contrôlez les accès de votre équipe.</p>
+                </div>
+                <a href="/" class="inline-flex w-fit items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-brand-blue transition hover:border-brand-orange">
+                    <i class="fa-solid fa-arrow-up-right-from-square text-xs" aria-hidden="true"></i> Voir la boutique
+                </a>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                <article class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+                    <p class="text-sm text-gray-500">Articles au catalogue</p>
+                    <p id="stat-products" class="mt-2 text-3xl font-extrabold text-brand-blue">—</p>
+                </article>
+                <article class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+                    <p class="text-sm text-gray-500">Articles en promotion</p>
+                    <p id="stat-promotions" class="mt-2 text-3xl font-extrabold text-brand-orange">—</p>
+                </article>
+                <article class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+                    <p class="text-sm text-gray-500">Comptes actifs</p>
+                    <p id="stat-users" class="mt-2 text-3xl font-extrabold text-brand-blue">—</p>
+                </article>
+                <article class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+                    <p class="text-sm text-gray-500">Promotions (%)</p>
+                    <p class="mt-2 text-sm font-semibold text-gray-700">Calculées depuis les prix</p>
+                </article>
+            </div>
+
+            <div class="flex gap-2 overflow-x-auto border-b border-gray-200">
+                <button type="button" class="admin-tab whitespace-nowrap border-b-2 border-transparent px-4 py-3 text-sm font-semibold text-gray-600" data-panel="products-panel" aria-current="page">Produits</button>
+                <button id="users-tab-button" type="button" class="admin-tab hidden whitespace-nowrap border-b-2 border-transparent px-4 py-3 text-sm font-semibold text-gray-600" data-panel="users-panel">Utilisateurs et permissions</button>
+                <button id="audit-tab-button" type="button" class="admin-tab hidden whitespace-nowrap border-b-2 border-transparent px-4 py-3 text-sm font-semibold text-gray-600" data-panel="audit-panel">Journal d’activité</button>
+            </div>
+
+            <section id="products-panel" class="space-y-5" aria-label="Gestion des produits">
+                <div id="products-access-denied" class="hidden rounded-xl border border-gray-200 bg-white p-8 text-center text-sm text-gray-600">Votre compte ne dispose d’aucune permission sur le catalogue.</div>
+                <div id="products-management-content" class="space-y-5">
+                <div class="flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+                    <label class="relative block w-full sm:max-w-sm">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400" aria-hidden="true"></i>
+                        <input id="product-search" type="search" placeholder="Rechercher un article..." class="w-full rounded-lg border border-gray-300 py-2.5 pl-9 pr-3 text-sm focus:border-brand-orange focus:outline-none focus:ring-2 focus:ring-red-100">
+                    </label>
+                    <button id="add-product-button" type="button" class="hidden w-fit items-center gap-2 rounded-lg bg-brand-orange px-4 py-2.5 text-sm font-bold text-white transition hover:brightness-95">
+                        <i class="fa-solid fa-plus" aria-hidden="true"></i> Ajouter un article
+                    </button>
+                </div>
+                <div id="products-message" class="hidden rounded-lg p-3 text-sm" role="status" aria-live="polite"></div>
+                <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-[760px] w-full text-left text-sm">
+                            <thead class="bg-gray-50 text-xs uppercase tracking-wide text-gray-500">
+                                <tr><th scope="col" class="px-4 py-3">Article</th><th scope="col" class="px-4 py-3">Catégorie</th><th scope="col" class="px-4 py-3">Prix normal</th><th scope="col" class="px-4 py-3">Prix actuel</th><th scope="col" class="px-4 py-3">Promo</th><th scope="col" class="px-4 py-3 text-right">Actions</th></tr>
+                            </thead>
+                            <tbody id="products-table-body" class="divide-y divide-gray-100"></tbody>
+                        </table>
+                    </div>
+                    <p id="products-empty" class="hidden p-8 text-center text-sm text-gray-500">Aucun article correspondant.</p>
+                </div>
+                </div>
+            </section>
+
+            <section id="users-panel" class="hidden space-y-5" aria-label="Gestion des comptes">
+                <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm sm:p-6">
+                    <h2 class="text-lg font-bold text-brand-blue">Créer un compte</h2>
+                    <p class="mt-1 text-sm text-gray-500">Créez un compte admin ou un utilisateur avec des accès limités. Mot de passe d’au moins 12 caractères.</p>
+                    <form id="user-form" class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                        <label class="text-sm font-semibold text-gray-700">Nom d’utilisateur
+                            <input name="username" required minlength="3" maxlength="40" pattern="[A-Za-z0-9._\x2d]+" autocomplete="off" class="mt-1.5 w-full rounded-lg border border-gray-300 px-3 py-2.5 font-normal focus:border-brand-orange focus:outline-none focus:ring-2 focus:ring-red-100">
+                        </label>
+                        <label class="text-sm font-semibold text-gray-700">Mot de passe
+                            <input name="password" type="password" required minlength="12" maxlength="200" autocomplete="new-password" class="mt-1.5 w-full rounded-lg border border-gray-300 px-3 py-2.5 font-normal focus:border-brand-orange focus:outline-none focus:ring-2 focus:ring-red-100">
+                        </label>
+                        <label class="text-sm font-semibold text-gray-700">Type de compte
+                            <select name="role" id="new-user-role" class="mt-1.5 w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 font-normal focus:border-brand-orange focus:outline-none focus:ring-2 focus:ring-red-100">
+                                <option value="user">Utilisateur</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </label>
+                        <fieldset id="new-user-permissions" class="text-sm">
+                            <legend class="font-semibold text-gray-700">Permissions</legend>
+                            <label class="mt-2 flex items-center gap-2"><input name="permission" type="checkbox" value="products.view" checked class="accent-brand-orange"> Voir les produits</label>
+                            <label class="mt-2 flex items-center gap-2"><input name="permission" type="checkbox" value="products.manage" class="accent-brand-orange"> Gérer les produits</label>
+                        </fieldset>
+                        <button type="submit" class="w-fit rounded-lg bg-brand-orange px-5 py-2.5 font-bold text-white transition hover:brightness-95 sm:col-span-2 lg:col-span-4">Créer le compte</button>
+                    </form>
+                </div>
+                <div id="users-message" class="hidden rounded-lg p-3 text-sm" role="status" aria-live="polite"></div>
+                <div id="users-list" class="grid gap-4 lg:grid-cols-2"></div>
+            </section>
+
+            <section id="audit-panel" class="hidden" aria-label="Journal d’activité">
+                <div id="audit-list" class="divide-y divide-gray-100 rounded-xl border border-gray-200 bg-white px-5 shadow-sm"></div>
+            </section>
+        </section>
+    </main>
+
+    <dialog id="product-dialog" class="w-full max-w-xl rounded-2xl border-0 p-0 shadow-2xl backdrop:bg-black/60">
+        <form id="product-form" class="space-y-4 p-5 sm:p-7">
+            <div class="flex items-start justify-between gap-4">
+                <div><p class="text-sm font-semibold uppercase tracking-wide text-brand-orange">Catalogue AZ TECH</p><h2 id="product-dialog-title" class="mt-1 text-xl font-bold text-brand-blue">Ajouter un article</h2></div>
+                <button type="button" id="product-dialog-close" class="rounded-lg px-3 py-2 text-sm font-semibold text-gray-500 hover:bg-gray-100" aria-label="Fermer">Fermer</button>
+            </div>
+            <input name="id" type="hidden">
+            <label class="block text-sm font-semibold text-gray-700">Nom de l’article
+                <input name="title" required maxlength="160" class="mt-1.5 w-full rounded-lg border border-gray-300 px-3 py-2.5 font-normal focus:border-brand-orange focus:outline-none focus:ring-2 focus:ring-red-100">
+            </label>
+            <div class="grid gap-4 sm:grid-cols-2">
+                <label class="block text-sm font-semibold text-gray-700">Marque
+                    <input name="brand" required maxlength="100" class="mt-1.5 w-full rounded-lg border border-gray-300 px-3 py-2.5 font-normal focus:border-brand-orange focus:outline-none focus:ring-2 focus:ring-red-100">
+                </label>
+                <label class="block text-sm font-semibold text-gray-700">Catégorie
+                    <select name="category" required class="mt-1.5 w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 font-normal focus:border-brand-orange focus:outline-none focus:ring-2 focus:ring-red-100">
+                        <option value="telephones">Téléphones</option><option value="laptops">Ordinateurs portables</option><option value="accessoires">Accessoires</option><option value="televiseurs">Téléviseurs</option><option value="electromenagers">Électroménager</option>
+                    </select>
+                </label>
+                <label class="block text-sm font-semibold text-gray-700">Prix actuel (DH)
+                    <input name="price" type="number" min="0" step="0.01" required class="mt-1.5 w-full rounded-lg border border-gray-300 px-3 py-2.5 font-normal focus:border-brand-orange focus:outline-none focus:ring-2 focus:ring-red-100">
+                </label>
+                <label class="block text-sm font-semibold text-gray-700">Ancien prix / prix barré (DH)
+                    <input name="oldPrice" type="number" min="0" step="0.01" class="mt-1.5 w-full rounded-lg border border-gray-300 px-3 py-2.5 font-normal focus:border-brand-orange focus:outline-none focus:ring-2 focus:ring-red-100">
+                </label>
+            </div>
+            <div>
+                <span class="block text-sm font-semibold text-gray-700">Photo de l’article</span>
+                <label class="mt-1.5 flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 px-4 py-6 text-center transition hover:border-brand-orange hover:bg-red-50/30">
+                    <i class="fa-solid fa-cloud-arrow-up text-2xl text-brand-orange" aria-hidden="true"></i>
+                    <span class="text-sm font-semibold text-brand-blue">Choisir une photo sur cet appareil</span>
+                    <span class="text-xs text-gray-500">PNG, JPEG, WebP ou GIF · 5 Mo maximum</span>
+                    <input name="imageFile" type="file" accept="image/png,image/jpeg,image/webp,image/gif" class="sr-only">
+                </label>
+                <img id="product-image-preview" alt="Aperçu de la photo du produit" class="mt-3 hidden h-36 w-36 rounded-xl border border-gray-200 bg-white object-contain p-2">
+                <p id="product-image-name" class="mt-2 text-xs text-gray-500"></p>
+                <input name="img" type="hidden">
+            </div>
+            <label class="block text-sm font-semibold text-gray-700">Description
+                <textarea name="description" maxlength="2000" rows="3" class="mt-1.5 w-full rounded-lg border border-gray-300 px-3 py-2.5 font-normal focus:border-brand-orange focus:outline-none focus:ring-2 focus:ring-red-100"></textarea>
+            </label>
+            <p id="product-form-error" class="hidden rounded-lg bg-red-50 p-3 text-sm text-red-700" role="alert"></p>
+            <button type="submit" class="w-full rounded-lg bg-brand-orange px-5 py-3 font-bold text-white transition hover:brightness-95">Enregistrer l’article</button>
+        </form>
+    </dialog>
+
+    <script src="/admin.js?v=2" defer></script>
+</body>
+</html>
