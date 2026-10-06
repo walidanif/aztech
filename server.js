@@ -251,6 +251,18 @@ function publishCatalogUpdate() {
 }
 
 async function readJson(req, maxBytes = 64 * 1024) {
+    if (req.body !== undefined) {
+        const body = typeof req.body === 'string' || Buffer.isBuffer(req.body)
+            ? req.body
+            : JSON.stringify(req.body);
+        if (Buffer.byteLength(body) > maxBytes) throw httpError(413, 'Request body is too large.');
+        try {
+            return JSON.parse(body.toString('utf8') || '{}');
+        } catch {
+            throw httpError(400, 'Request body must be valid JSON.');
+        }
+    }
+
     const chunks = [];
     let size = 0;
     for await (const chunk of req) {
@@ -424,7 +436,7 @@ async function handleApi(req, res, url) {
         requireSameOrigin(req);
         const data = await readJson(req);
         const username = normalizedUsername(data.username);
-        const ip = req.socket.remoteAddress || 'unknown';
+        const ip = req.socket?.remoteAddress || 'unknown';
         const now = Date.now();
         const attempts = (loginAttempts.get(ip) || []).filter(time => now - time < 15 * 60 * 1000);
         if (attempts.length >= 10) throw httpError(429, 'Too many sign-in attempts. Try again in 15 minutes.');
