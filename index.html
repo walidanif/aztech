@@ -78,14 +78,14 @@
         <!-- Navigation Menu -->
         <nav class="bg-white text-gray-800 border-b border-gray-200 shadow-sm">
             <div class="container mx-auto px-4 overflow-x-auto hide-scroll">
-                <ul class="flex space-x-8 text-sm font-medium py-3 whitespace-nowrap">
-                    <li><button onclick="switchTab('accueil')" id="nav-accueil" class="nav-link text-brand-blue border-b-2 border-brand-blue font-bold pb-1 hover:text-brand-blue transition">Accueil</button></li>
-                    <li><button onclick="switchTab('catalogue')" id="nav-catalogue" class="nav-link text-gray-600 hover:text-brand-blue transition">Tous les articles</button></li>
-                    <li><button onclick="switchTab('telephones')" id="nav-telephones" class="nav-link text-gray-600 hover:text-brand-blue transition">Téléphones</button></li>
-                    <li><button onclick="switchTab('laptops')" id="nav-laptops" class="nav-link text-gray-600 hover:text-brand-blue transition">Laptops</button></li>
-                    <li><button onclick="switchTab('accessoires')" id="nav-accessoires" class="nav-link text-gray-600 hover:text-brand-blue transition">Accessoires</button></li>
-                    <li><button onclick="switchTab('televiseurs')" id="nav-televiseurs" class="nav-link text-gray-600 hover:text-brand-blue transition">Téléviseurs</button></li>
-                    <li><button onclick="switchTab('electromenagers')" id="nav-electromenagers" class="nav-link text-gray-600 hover:text-brand-blue transition">Électroménagers</button></li>
+                <ul class="flex gap-8 text-sm font-medium py-3 whitespace-nowrap">
+                    <li><button onclick="switchTab('accueil')" id="nav-accueil" class="nav-link text-brand-blue border-b-2 border-brand-blue font-bold pb-1 hover:text-brand-blue transition" data-i18n="home">الرئيسية</button></li>
+                    <li><button onclick="switchTab('catalogue')" id="nav-catalogue" class="nav-link text-gray-600 hover:text-brand-blue transition" data-i18n="allProducts">جميع المنتجات</button></li>
+                    <li><button onclick="switchTab('telephones')" id="nav-telephones" class="nav-link text-gray-600 hover:text-brand-blue transition" data-i18n="phones">الهواتف</button></li>
+                    <li><button onclick="switchTab('laptops')" id="nav-laptops" class="nav-link text-gray-600 hover:text-brand-blue transition" data-i18n="laptops">الحواسيب المحمولة</button></li>
+                    <li><button onclick="switchTab('accessoires')" id="nav-accessoires" class="nav-link text-gray-600 hover:text-brand-blue transition" data-i18n="accessories">الإكسسوارات</button></li>
+                    <li><button onclick="switchTab('televiseurs')" id="nav-televiseurs" class="nav-link text-gray-600 hover:text-brand-blue transition" data-i18n="tvs">التلفزيونات</button></li>
+                    <li><button onclick="switchTab('electromenagers')" id="nav-electromenagers" class="nav-link text-gray-600 hover:text-brand-blue transition" data-i18n="appliances">الأجهزة المنزلية</button></li>
                 </ul>
             </div>
         </nav>
@@ -95,10 +95,10 @@
         <section id="search-results" class="hidden mb-10">
             <div class="mb-5 flex flex-wrap items-end justify-between gap-3">
                 <div>
-                    <p class="mb-1 text-sm font-semibold uppercase tracking-wide text-gray-500">Recherche</p>
+                    <p class="mb-1 text-sm font-semibold uppercase tracking-wide text-gray-500" data-i18n="searchLabel">بحث</p>
                     <h2 id="search-results-title" class="text-2xl font-bold text-brand-blue"></h2>
                 </div>
-                <button type="button" onclick="switchTab('catalogue')" class="font-semibold text-brand-blue underline underline-offset-4">Voir tout le catalogue</button>
+                <button type="button" onclick="switchTab('catalogue')" class="font-semibold text-brand-blue underline underline-offset-4" data-i18n="viewCatalog">عرض جميع المنتجات</button>
             </div>
             <div id="search-results-container" class="grid grid-cols-2 gap-4 md:grid-cols-3 md:gap-6 lg:grid-cols-4"></div>
         </section>
@@ -108,24 +108,24 @@
             <!-- Hero Banner -->
             <div class="mb-10 rounded-2xl bg-brand-blue px-6 py-10 text-white shadow-lg md:px-12 md:py-14">
                 <p class="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-brand-orange">AZ TECH Maroc</p>
-                <h2 class="max-w-3xl text-3xl font-bold leading-tight md:text-5xl">Le bon équipement, au bon prix.</h2>
-                <p class="mt-4 max-w-2xl text-base text-white/80 md:text-lg">Smartphones, ordinateurs, téléviseurs et accessoires. Choisissez un article et passez commande en quelques étapes.</p>
+                <h2 class="max-w-3xl text-3xl font-bold leading-tight md:text-5xl" data-i18n="heroTitle">أفضل الأجهزة بأفضل الأسعار</h2>
+                <p class="mt-4 max-w-2xl text-base text-white/80 md:text-lg" data-i18n="heroDescription">هواتف وحواسيب وتلفزيونات وإكسسوارات. اختر المنتج وأرسل طلبك في خطوات بسيطة.</p>
                 <div class="mt-8 flex flex-wrap items-center gap-4">
-                    <button onclick="switchTab('catalogue')" class="rounded-md bg-brand-orange px-6 py-3 font-bold text-brand-blue transition hover:brightness-95">Voir tous les articles</button>
-                    <span class="text-sm text-white/75">Livraison partout au Maroc</span>
+                    <button onclick="switchTab('catalogue')" class="rounded-md bg-brand-orange px-6 py-3 font-bold text-brand-blue transition hover:brightness-95" data-i18n="browseProducts">تصفح المنتجات</button>
+                    <span class="text-sm text-white/75" data-i18n="shipping">توصيل لجميع أنحاء المغرب</span>
                 </div>
             </div>
 
             <!-- Categories -->
             <section class="mb-12">
-                <h3 class="text-xl font-bold mb-6 border-b-2 border-brand-orange inline-block pb-1">Nos Catégories</h3>
-                <div class="grid grid-cols-2 gap-3 text-left sm:grid-cols-3 lg:grid-cols-6">
-                    <button onclick="switchTab('telephones')" class="rounded-lg border border-gray-200 bg-white p-4 text-left font-semibold text-brand-blue shadow-sm transition hover:border-brand-orange">Téléphones</button>
-                    <button onclick="switchTab('laptops')" class="rounded-lg border border-gray-200 bg-white p-4 text-left font-semibold text-brand-blue shadow-sm transition hover:border-brand-orange">Laptops</button>
-                    <button onclick="switchTab('accessoires')" class="rounded-lg border border-gray-200 bg-white p-4 text-left font-semibold text-brand-blue shadow-sm transition hover:border-brand-orange">Accessoires</button>
-                    <button onclick="switchTab('televiseurs')" class="rounded-lg border border-gray-200 bg-white p-4 text-left font-semibold text-brand-blue shadow-sm transition hover:border-brand-orange">Téléviseurs</button>
-                    <button onclick="switchTab('electromenagers')" class="rounded-lg border border-gray-200 bg-white p-4 text-left font-semibold text-brand-blue shadow-sm transition hover:border-brand-orange">Électroménager</button>
-                    <button onclick="switchTab('catalogue')" class="rounded-lg border border-gray-200 bg-white p-4 text-left font-semibold text-brand-blue shadow-sm transition hover:border-brand-orange">Voir tout</button>
+                <h3 class="text-xl font-bold mb-6 border-b-2 border-brand-orange inline-block pb-1" data-i18n="categories">الأصناف</h3>
+                <div class="grid grid-cols-2 gap-3 text-start sm:grid-cols-3 lg:grid-cols-6">
+                    <button onclick="switchTab('telephones')" class="rounded-lg border border-gray-200 bg-white p-4 text-start font-semibold text-brand-blue shadow-sm transition hover:border-brand-orange" data-i18n="phones">الهواتف</button>
+                    <button onclick="switchTab('laptops')" class="rounded-lg border border-gray-200 bg-white p-4 text-start font-semibold text-brand-blue shadow-sm transition hover:border-brand-orange" data-i18n="laptops">الحواسيب المحمولة</button>
+                    <button onclick="switchTab('accessoires')" class="rounded-lg border border-gray-200 bg-white p-4 text-start font-semibold text-brand-blue shadow-sm transition hover:border-brand-orange" data-i18n="accessories">الإكسسوارات</button>
+                    <button onclick="switchTab('televiseurs')" class="rounded-lg border border-gray-200 bg-white p-4 text-start font-semibold text-brand-blue shadow-sm transition hover:border-brand-orange" data-i18n="tvs">التلفزيونات</button>
+                    <button onclick="switchTab('electromenagers')" class="rounded-lg border border-gray-200 bg-white p-4 text-start font-semibold text-brand-blue shadow-sm transition hover:border-brand-orange" data-i18n="appliances">الأجهزة المنزلية</button>
+                    <button onclick="switchTab('catalogue')" class="rounded-lg border border-gray-200 bg-white p-4 text-start font-semibold text-brand-blue shadow-sm transition hover:border-brand-orange" data-i18n="viewAll">عرض الكل</button>
                 </div>
             </section>
 
@@ -133,10 +133,10 @@
             <section class="mb-12">
                 <div class="flex justify-between items-end mb-6">
                     <div>
-                        <h3 class="text-xl font-bold border-b-2 border-brand-orange inline-block pb-1">Articles en vente</h3>
-                        <p class="mt-2 text-sm text-gray-500">Prix et disponibilité à confirmer avec notre équipe.</p>
+                        <h3 class="text-xl font-bold border-b-2 border-brand-orange inline-block pb-1" data-i18n="featured">منتجات مميزة</h3>
+                        <p class="mt-2 text-sm text-gray-500" data-i18n="priceNote">يرجى تأكيد السعر والتوفر مع فريقنا.</p>
                     </div>
-                    <button onclick="switchTab('catalogue')" class="text-sm font-semibold text-brand-blue hover:underline">Voir tout</button>
+                    <button onclick="switchTab('catalogue')" class="text-sm font-semibold text-brand-blue hover:underline" data-i18n="viewAll">عرض الكل</button>
                 </div>
                 <div id="featured-products-container" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
                     <!-- Products injected via JS -->
@@ -145,7 +145,7 @@
 
             <!-- Brands Section -->
             <section class="mb-8">
-                <h3 class="text-xl font-bold mb-6 border-b-2 border-brand-orange inline-block pb-1">Nos Marques Partenaires</h3>
+                <h3 class="text-xl font-bold mb-6 border-b-2 border-brand-orange inline-block pb-1" data-i18n="brands">علاماتنا التجارية</h3>
                 <div class="flex flex-wrap items-center gap-x-10 gap-y-4 rounded-xl border border-gray-200 bg-white p-6 font-semibold text-gray-500">
                     <span>Samsung</span><span>Apple</span><span>Xiaomi</span><span>HP</span><span>Lenovo</span><span>Oppo</span><span>JBL</span><span>LG</span>
                 </div>
@@ -154,14 +154,14 @@
 
         <!-- ALL PRODUCTS TAB -->
         <div id="tab-catalogue" class="tab-content hidden">
-            <h2 class="mb-2 text-2xl font-bold text-brand-blue">Tous les articles</h2>
-            <p class="mb-6 text-gray-600">Choisissez un article pour voir les détails et commander.</p>
+            <h2 class="mb-2 text-2xl font-bold text-brand-blue" data-i18n="allProducts">جميع المنتجات</h2>
+            <p class="mb-6 text-gray-600" data-i18n="catalogDescription">اختر منتجاً للاطلاع على التفاصيل وإتمام الطلب.</p>
             <div id="all-products-container" class="grid grid-cols-2 gap-4 md:grid-cols-3 md:gap-6 lg:grid-cols-4"></div>
         </div>
 
         <!-- TÉLÉPHONES TAB -->
         <div id="tab-telephones" class="tab-content hidden">
-            <h2 class="text-2xl font-bold mb-6">Smartphones & Téléphones</h2>
+            <h2 class="text-2xl font-bold mb-6" data-i18n="phones">الهواتف</h2>
             <div id="telephones-products-container" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
                 <!-- Products injected via JS -->
             </div>
@@ -169,7 +169,7 @@
 
         <!-- LAPTOPS TAB -->
         <div id="tab-laptops" class="tab-content hidden">
-            <h2 class="text-2xl font-bold mb-6">Ordinateurs Portables</h2>
+            <h2 class="text-2xl font-bold mb-6" data-i18n="laptops">الحواسيب المحمولة</h2>
             <div id="laptops-products-container" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
                 <!-- Products injected via JS -->
             </div>
@@ -177,7 +177,7 @@
 
         <!-- ÉLECTROMÉNAGERS TAB -->
         <div id="tab-electromenagers" class="tab-content hidden">
-            <h2 class="text-2xl font-bold mb-6">Électroménager</h2>
+            <h2 class="text-2xl font-bold mb-6" data-i18n="appliances">الأجهزة المنزلية</h2>
             <div id="electromenagers-products-container" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
                 <!-- Products injected via JS -->
             </div>
@@ -185,15 +185,15 @@
         
         <!-- ACCESSOIRES TAB -->
         <div id="tab-accessoires" class="tab-content hidden">
-            <h2 class="mb-2 text-2xl font-bold text-brand-blue">Accessoires</h2>
-            <p class="mb-6 text-gray-600">Écouteurs, chargeurs et accessoires du quotidien.</p>
+            <h2 class="mb-2 text-2xl font-bold text-brand-blue" data-i18n="accessories">الإكسسوارات</h2>
+            <p class="mb-6 text-gray-600" data-i18n="accessoriesDescription">سماعات وشواحن وإكسسوارات للاستعمال اليومي.</p>
             <div id="accessoires-products-container" class="grid grid-cols-2 gap-4 md:grid-cols-3 md:gap-6 lg:grid-cols-4"></div>
         </div>
 
         <!-- TV TAB -->
         <div id="tab-televiseurs" class="tab-content hidden">
-            <h2 class="mb-2 text-2xl font-bold text-brand-blue">Téléviseurs</h2>
-            <p class="mb-6 text-gray-600">Des écrans pour équiper votre salon.</p>
+            <h2 class="mb-2 text-2xl font-bold text-brand-blue" data-i18n="tvs">التلفزيونات</h2>
+            <p class="mb-6 text-gray-600" data-i18n="tvDescription">شاشات مناسبة لتجهيز منزلك.</p>
             <div id="televiseurs-products-container" class="grid grid-cols-2 gap-4 md:grid-cols-3 md:gap-6 lg:grid-cols-4"></div>
         </div>
 
@@ -202,35 +202,35 @@
     <!-- Direct order form -->
     <div id="checkout-modal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/60 p-4" aria-hidden="true">
         <section class="relative w-full max-w-xl max-h-[92vh] overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl md:p-8" role="dialog" aria-modal="true" aria-labelledby="checkout-title">
-            <button type="button" onclick="closeCheckout()" class="absolute right-4 top-4 rounded-md px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100" aria-label="Fermer">
-                Fermer
+            <button type="button" onclick="closeCheckout()" class="modal-close absolute right-4 top-4 rounded-md px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100" aria-label="إغلاق" data-i18n="close">
+                إغلاق
             </button>
-            <h2 id="checkout-title" class="mb-2 text-2xl font-bold text-brand-blue">Commander</h2>
-            <p class="mb-5 text-sm text-gray-600">Remplissez vos coordonnées. Nous vous contacterons pour confirmer la commande.</p>
+            <h2 id="checkout-title" class="mb-2 text-2xl font-bold text-brand-blue" data-i18n="orderTitle">إتمام الطلب</h2>
+            <p class="mb-5 text-sm text-gray-600" data-i18n="orderInstructions">أدخل معلوماتك وسنتواصل معك لتأكيد الطلب.</p>
             <div id="order-summary" class="mb-5 rounded-lg bg-blue-50 p-4 text-sm text-gray-800"></div>
             <form id="checkout-form" class="space-y-4">
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <label class="block text-sm font-medium text-gray-700">Prénom
+                    <label class="block text-sm font-medium text-gray-700"><span data-i18n="firstName">الاسم الشخصي</span>
                         <input name="firstName" autocomplete="given-name" required maxlength="80" class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 font-normal focus:border-brand-blue focus:outline-none focus:ring-2 focus:ring-blue-200">
                     </label>
-                    <label class="block text-sm font-medium text-gray-700">Nom
+                    <label class="block text-sm font-medium text-gray-700"><span data-i18n="lastName">النسب</span>
                         <input name="lastName" autocomplete="family-name" required maxlength="80" class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 font-normal focus:border-brand-blue focus:outline-none focus:ring-2 focus:ring-blue-200">
                     </label>
                 </div>
-                <label class="block text-sm font-medium text-gray-700">Numéro de téléphone
+                <label class="block text-sm font-medium text-gray-700"><span data-i18n="phone">رقم الهاتف</span>
                     <input name="phone" type="tel" autocomplete="tel" inputmode="tel" required maxlength="24" placeholder="06 00 00 00 00" class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 font-normal focus:border-brand-blue focus:outline-none focus:ring-2 focus:ring-blue-200">
                 </label>
-                <label class="block text-sm font-medium text-gray-700">Adresse de livraison
-                    <textarea name="address" autocomplete="street-address" required maxlength="500" rows="3" placeholder="Rue, quartier, ville" class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 font-normal focus:border-brand-blue focus:outline-none focus:ring-2 focus:ring-blue-200"></textarea>
+                <label class="block text-sm font-medium text-gray-700"><span data-i18n="address">عنوان التوصيل</span>
+                    <textarea name="address" autocomplete="street-address" required maxlength="500" rows="3" data-i18n-placeholder="addressPlaceholder" placeholder="الشارع، الحي، المدينة" class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 font-normal focus:border-brand-blue focus:outline-none focus:ring-2 focus:ring-blue-200"></textarea>
                 </label>
-                <label class="block text-sm font-medium text-gray-700">Quantité
+                <label class="block text-sm font-medium text-gray-700"><span data-i18n="quantity">الكمية</span>
                     <input id="order-quantity" name="quantity" type="number" min="1" max="20" value="1" required class="mt-1 w-28 rounded-md border border-gray-300 px-3 py-2 font-normal focus:border-brand-blue focus:outline-none focus:ring-2 focus:ring-blue-200">
                 </label>
                 <p id="checkout-message" class="hidden rounded-md px-3 py-2 text-sm" role="status" aria-live="polite"></p>
                 <div class="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:justify-end">
-                    <button type="button" onclick="closeCheckout()" class="rounded-md border border-gray-300 px-5 py-2.5 font-medium text-gray-700 hover:bg-gray-50">Annuler</button>
+                    <button type="button" onclick="closeCheckout()" class="rounded-md border border-gray-300 px-5 py-2.5 font-medium text-gray-700 hover:bg-gray-50" data-i18n="cancel">إلغاء</button>
                     <button id="submit-order-button" type="submit" class="rounded-md bg-brand-orange px-5 py-2.5 font-bold text-brand-blue hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-60">
-                        Envoyer ma commande
+                        <span data-i18n="sendOrder">إرسال الطلب</span>
                     </button>
                 </div>
             </form>
@@ -240,7 +240,7 @@
     <!-- Product details -->
     <div id="product-detail-modal" class="fixed inset-0 z-[90] hidden items-center justify-center bg-black/60 p-4" aria-hidden="true">
         <section class="relative grid w-full max-w-3xl gap-6 overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl md:grid-cols-2 md:p-8" role="dialog" aria-modal="true" aria-labelledby="detail-title">
-            <button type="button" onclick="closeProductDetails()" class="absolute right-4 top-4 rounded-md px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100" aria-label="Fermer">Fermer</button>
+            <button type="button" onclick="closeProductDetails()" class="modal-close absolute right-4 top-4 rounded-md px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100" aria-label="إغلاق" data-i18n="close">إغلاق</button>
             <img id="detail-image" src="" alt="" class="mt-8 aspect-square w-full rounded-xl bg-gray-50 object-cover md:mt-0">
             <div class="flex flex-col justify-center pt-8 md:pt-0">
                 <p id="detail-brand" class="mb-2 text-sm font-semibold uppercase tracking-wide text-gray-500"></p>
@@ -250,13 +250,13 @@
                     <span id="detail-old-price" class="mr-2 text-sm text-gray-400 line-through"></span>
                     <span id="detail-price" class="text-2xl font-bold text-brand-blue"></span>
                 </div>
-                <button id="detail-order-button" type="button" class="w-full rounded-md bg-brand-orange px-5 py-3 font-bold text-brand-blue hover:brightness-95">Commander cet article</button>
+                <button id="detail-order-button" type="button" class="w-full rounded-md bg-brand-orange px-5 py-3 font-bold text-brand-blue hover:brightness-95" data-i18n="orderThis">اطلب هذا المنتج</button>
             </div>
         </section>
     </div>
 
-    <a href="https://wa.me/212652517115" onclick="openWhatsApp(event)" target="_blank" rel="noopener" aria-label="Contacter AZ TECH sur WhatsApp" class="fixed bottom-5 right-5 z-[80] rounded-full bg-green-600 px-5 py-3 font-bold text-white shadow-lg transition hover:bg-green-700">
-        <i class="fab fa-whatsapp mr-2" aria-hidden="true"></i>WhatsApp
+    <a id="whatsapp-button" href="https://wa.me/212652517115" onclick="openWhatsApp(event)" target="_blank" rel="noopener" aria-label="تواصل مع AZ TECH عبر واتساب" class="fixed bottom-5 right-5 z-[80] rounded-full bg-green-600 px-5 py-3 font-bold text-white shadow-lg transition hover:bg-green-700">
+        <i class="fab fa-whatsapp mr-2" aria-hidden="true"></i><span data-i18n="whatsapp">واتساب</span>
     </a>
 
     <!-- Footer -->
@@ -265,27 +265,27 @@
             <div class="mb-8 grid grid-cols-1 gap-8 md:grid-cols-3">
                 <div>
                     <p class="mb-3 text-2xl font-bold">AZ TECH</p>
-                    <p class="max-w-sm text-sm leading-6 text-white/75">Votre magasin d'électronique au Maroc. Parcourez les articles et commandez directement en ligne.</p>
+                    <p class="max-w-sm text-sm leading-6 text-white/75" data-i18n="footerAbout">متجركم للإلكترونيات في المغرب. تصفحوا المنتجات وأرسلوا طلباتكم مباشرة.</p>
                 </div>
                 <div>
-                    <h4 class="mb-4 font-bold">Nos catégories</h4>
+                    <h4 class="mb-4 font-bold" data-i18n="categories">الأصناف</h4>
                     <div class="grid grid-cols-2 gap-3 text-sm text-white/80">
-                        <button onclick="switchTab('catalogue')" class="text-left hover:text-brand-orange">Tous les articles</button>
-                        <button onclick="switchTab('telephones')" class="text-left hover:text-brand-orange">Téléphones</button>
-                        <button onclick="switchTab('laptops')" class="text-left hover:text-brand-orange">Laptops</button>
-                        <button onclick="switchTab('accessoires')" class="text-left hover:text-brand-orange">Accessoires</button>
-                        <button onclick="switchTab('televiseurs')" class="text-left hover:text-brand-orange">Téléviseurs</button>
-                        <button onclick="switchTab('electromenagers')" class="text-left hover:text-brand-orange">Électroménager</button>
+                        <button onclick="switchTab('catalogue')" class="text-start hover:text-brand-orange" data-i18n="allProducts">جميع المنتجات</button>
+                        <button onclick="switchTab('telephones')" class="text-start hover:text-brand-orange" data-i18n="phones">الهواتف</button>
+                        <button onclick="switchTab('laptops')" class="text-start hover:text-brand-orange" data-i18n="laptops">الحواسيب المحمولة</button>
+                        <button onclick="switchTab('accessoires')" class="text-start hover:text-brand-orange" data-i18n="accessories">الإكسسوارات</button>
+                        <button onclick="switchTab('televiseurs')" class="text-start hover:text-brand-orange" data-i18n="tvs">التلفزيونات</button>
+                        <button onclick="switchTab('electromenagers')" class="text-start hover:text-brand-orange" data-i18n="appliances">الأجهزة المنزلية</button>
                     </div>
                 </div>
                 <div>
-                    <h4 class="mb-4 font-bold">Contact WhatsApp</h4>
+                    <h4 class="mb-4 font-bold" data-i18n="whatsappContact">التواصل عبر واتساب</h4>
                     <p class="mb-3 text-sm text-white/75">+212 652 517 115</p>
-                    <a href="https://wa.me/212652517115" onclick="openWhatsApp(event)" target="_blank" rel="noopener" class="inline-block rounded-md bg-brand-orange px-4 py-2 font-semibold text-brand-blue hover:brightness-95">Écrivez-nous</a>
+                    <a href="https://wa.me/212652517115" onclick="openWhatsApp(event)" target="_blank" rel="noopener" class="inline-block rounded-md bg-brand-orange px-4 py-2 font-semibold text-brand-blue hover:brightness-95" data-i18n="writeUs">راسلونا</a>
                 </div>
             </div>
             <div class="border-t border-white/15 pt-5 text-center text-sm text-white/60">
-                <p>&copy; 2026 AZ TECH Maroc. Tous droits réservés.</p>
+                <p data-i18n="copyright">&copy; 2026 AZ TECH Maroc. جميع الحقوق محفوظة.</p>
             </div>
         </div>
     </footer>
