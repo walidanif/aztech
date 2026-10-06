@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AZ TECH - Votre magasin d'électronique</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            blue: '#1B263B',
+                            light: '#34445F',
+                            orange: '#F1C40F',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f7f8fa; }
+        .hide-scroll::-webkit-scrollbar { display: none; }
+        .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+        button, a { -webkit-tap-highlight-color: transparent; }
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <!-- Top Bar -->
+    <div class="bg-brand-blue text-xs text-white/90 py-2">
+        <div class="container mx-auto px-4 flex justify-between items-center">
+            <span>Livraison partout au Maroc</span>
+            <div class="flex items-center space-x-4">
+                <a href="#" onclick="openWhatsApp(event, 'Salam, bghit ntabe3 talabi.')" class="hover:text-brand-orange">Suivi de commande</a>
+                <a href="#" onclick="openWhatsApp(event)" class="hover:text-brand-orange">Contact</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Header -->
+    <header class="bg-brand-blue text-white sticky top-0 z-50 shadow-md">
+        <div class="container mx-auto px-4 py-4 flex flex-wrap lg:flex-nowrap items-center justify-between gap-4">
+            <!-- Logo -->
+            <div class="flex items-center justify-between w-full lg:w-auto">
+                <a href="#" onclick="switchTab('accueil')" class="text-2xl font-bold flex items-center gap-2">
+                    <span>AZ TECH</span>
+                </a>
+            </div>
+
+            <!-- Search Bar -->
+            <div class="flex-grow max-w-2xl w-full lg:w-auto order-3 lg:order-2">
+                <form id="search-form" class="relative flex w-full" onsubmit="searchProducts(event)">
+                    <input id="search-input" type="search" placeholder="Cherchez un produit, une marque..." class="w-full py-2.5 px-4 rounded-l-md text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-orange">
+                    <button type="submit" class="bg-brand-orange hover:brightness-95 text-brand-blue font-semibold py-2 px-5 rounded-r-md transition">
+                        Rechercher
+                    </button>
+                </form>
+            </div>
+
+            <div class="hidden lg:block text-sm font-medium text-white/90 order-2 lg:order-3">
+                Commande rapide et livraison partout au Maroc
+            </div>
+        </div>
+
+        <!-- Navigation Menu -->
+        <nav class="bg-white text-gray-800 border-b border-gray-200 shadow-sm">
+            <div class="container mx-auto px-4 overflow-x-auto hide-scroll">
+                <ul class="flex space-x-8 text-sm font-medium py-3 whitespace-nowrap">
+                    <li><button onclick="switchTab('accueil')" id="nav-accueil" class="nav-link text-brand-blue border-b-2 border-brand-blue font-bold pb-1 hover:text-brand-blue transition">Accueil</button></li>
+                    <li><button onclick="switchTab('catalogue')" id="nav-catalogue" class="nav-link text-gray-600 hover:text-brand-blue transition">Tous les articles</button></li>
+                    <li><button onclick="switchTab('telephones')" id="nav-telephones" class="nav-link text-gray-600 hover:text-brand-blue transition">Téléphones</button></li>
+                    <li><button onclick="switchTab('laptops')" id="nav-laptops" class="nav-link text-gray-600 hover:text-brand-blue transition">Laptops</button></li>
+                    <li><button onclick="switchTab('accessoires')" id="nav-accessoires" class="nav-link text-gray-600 hover:text-brand-blue transition">Accessoires</button></li>
+                    <li><button onclick="switchTab('televiseurs')" id="nav-televiseurs" class="nav-link text-gray-600 hover:text-brand-blue transition">Téléviseurs</button></li>
+                    <li><button onclick="switchTab('electromenagers')" id="nav-electromenagers" class="nav-link text-gray-600 hover:text-brand-blue transition">Électroménagers</button></li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-4 py-8 min-h-[60vh]">
+        <section id="search-results" class="hidden mb-10">
+            <div class="mb-5 flex flex-wrap items-end justify-between gap-3">
+                <div>
+                    <p class="mb-1 text-sm font-semibold uppercase tracking-wide text-gray-500">Recherche</p>
+                    <h2 id="search-results-title" class="text-2xl font-bold text-brand-blue"></h2>
+                </div>
+                <button type="button" onclick="switchTab('catalogue')" class="font-semibold text-brand-blue underline underline-offset-4">Voir tout le catalogue</button>
+            </div>
+            <div id="search-results-container" class="grid grid-cols-2 gap-4 md:grid-cols-3 md:gap-6 lg:grid-cols-4"></div>
+        </section>
+        
+        <!-- ACCUEIL TAB -->
+        <div id="tab-accueil" class="tab-content block">
+            <!-- Hero Banner -->
+            <div class="mb-10 rounded-2xl bg-brand-blue px-6 py-10 text-white shadow-lg md:px-12 md:py-14">
+                <p class="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-brand-orange">AZ TECH Maroc</p>
+                <h2 class="max-w-3xl text-3xl font-bold leading-tight md:text-5xl">Le bon équipement, au bon prix.</h2>
+                <p class="mt-4 max-w-2xl text-base text-white/80 md:text-lg">Smartphones, ordinateurs, téléviseurs et accessoires. Choisissez un article et passez commande en quelques étapes.</p>
+                <div class="mt-8 flex flex-wrap items-center gap-4">
+                    <button onclick="switchTab('catalogue')" class="rounded-md bg-brand-orange px-6 py-3 font-bold text-brand-blue transition hover:brightness-95">Voir tous les articles</button>
+                    <span class="text-sm text-white/75">Livraison partout au Maroc</span>
+                </div>
+            </div>
+
+            <!-- Categories -->
+            <section class="mb-12">
+                <h3 class="text-xl font-bold mb-6 border-b-2 border-brand-orange inline-block pb-1">Nos Catégories</h3>
+                <div class="grid grid-cols-2 gap-3 text-left sm:grid-cols-3 lg:grid-cols-6">
+                    <button onclick="switchTab('telephones')" class="rounded-lg border border-gray-200 bg-white p-4 text-left font-semibold text-brand-blue shadow-sm transition hover:border-brand-orange">Téléphones</button>
+                    <button onclick="switchTab('laptops')" class="rounded-lg border border-gray-200 bg-white p-4 text-left font-semibold text-brand-blue shadow-sm transition hover:border-brand-orange">Laptops</button>
+                    <button onclick="switchTab('accessoires')" class="rounded-lg border border-gray-200 bg-white p-4 text-left font-semibold text-brand-blue shadow-sm transition hover:border-brand-orange">Accessoires</button>
+                    <button onclick="switchTab('televiseurs')" class="rounded-lg border border-gray-200 bg-white p-4 text-left font-semibold text-brand-blue shadow-sm transition hover:border-brand-orange">Téléviseurs</button>
+                    <button onclick="switchTab('electromenagers')" class="rounded-lg border border-gray-200 bg-white p-4 text-left font-semibold text-brand-blue shadow-sm transition hover:border-brand-orange">Électroménager</button>
+                    <button onclick="switchTab('catalogue')" class="rounded-lg border border-gray-200 bg-white p-4 text-left font-semibold text-brand-blue shadow-sm transition hover:border-brand-orange">Voir tout</button>
+                </div>
+            </section>
+
+            <!-- Featured Products -->
+            <section class="mb-12">
+                <div class="flex justify-between items-end mb-6">
+                    <div>
+                        <h3 class="text-xl font-bold border-b-2 border-brand-orange inline-block pb-1">Articles en vente</h3>
+                        <p class="mt-2 text-sm text-gray-500">Prix et disponibilité à confirmer avec notre équipe.</p>
+                    </div>
+                    <button onclick="switchTab('catalogue')" class="text-sm font-semibold text-brand-blue hover:underline">Voir tout</button>
+                </div>
+                <div id="featured-products-container" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+                    <!-- Products injected via JS -->
+                </div>
+            </section>
+
+            <!-- Brands Section -->
+            <section class="mb-8">
+                <h3 class="text-xl font-bold mb-6 border-b-2 border-brand-orange inline-block pb-1">Nos Marques Partenaires</h3>
+                <div class="flex flex-wrap items-center gap-x-10 gap-y-4 rounded-xl border border-gray-200 bg-white p-6 font-semibold text-gray-500">
+                    <span>Samsung</span><span>Apple</span><span>Xiaomi</span><span>HP</span><span>Lenovo</span><span>Oppo</span><span>JBL</span><span>LG</span>
+                </div>
+            </section>
+        </div>
+
+        <!-- ALL PRODUCTS TAB -->
+        <div id="tab-catalogue" class="tab-content hidden">
+            <h2 class="mb-2 text-2xl font-bold text-brand-blue">Tous les articles</h2>
+            <p class="mb-6 text-gray-600">Choisissez un article pour voir les détails et commander.</p>
+            <div id="all-products-container" class="grid grid-cols-2 gap-4 md:grid-cols-3 md:gap-6 lg:grid-cols-4"></div>
+        </div>
+
+        <!-- TÉLÉPHONES TAB -->
+        <div id="tab-telephones" class="tab-content hidden">
+            <h2 class="text-2xl font-bold mb-6">Smartphones & Téléphones</h2>
+            <div id="telephones-products-container" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+                <!-- Products injected via JS -->
+            </div>
+        </div>
+
+        <!-- LAPTOPS TAB -->
+        <div id="tab-laptops" class="tab-content hidden">
+            <h2 class="text-2xl font-bold mb-6">Ordinateurs Portables</h2>
+            <div id="laptops-products-container" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+                <!-- Products injected via JS -->
+            </div>
+        </div>
+
+        <!-- ÉLECTROMÉNAGERS TAB -->
+        <div id="tab-electromenagers" class="tab-content hidden">
+            <h2 class="text-2xl font-bold mb-6">Électroménager</h2>
+            <div id="electromenagers-products-container" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+                <!-- Products injected via JS -->
+            </div>
+        </div>
+        
+        <!-- ACCESSOIRES TAB -->
+        <div id="tab-accessoires" class="tab-content hidden">
+            <h2 class="mb-2 text-2xl font-bold text-brand-blue">Accessoires</h2>
+            <p class="mb-6 text-gray-600">Écouteurs, chargeurs et accessoires du quotidien.</p>
+            <div id="accessoires-products-container" class="grid grid-cols-2 gap-4 md:grid-cols-3 md:gap-6 lg:grid-cols-4"></div>
+        </div>
+
+        <!-- TV TAB -->
+        <div id="tab-televiseurs" class="tab-content hidden">
+            <h2 class="mb-2 text-2xl font-bold text-brand-blue">Téléviseurs</h2>
+            <p class="mb-6 text-gray-600">Des écrans pour équiper votre salon.</p>
+            <div id="televiseurs-products-container" class="grid grid-cols-2 gap-4 md:grid-cols-3 md:gap-6 lg:grid-cols-4"></div>
+        </div>
+
+    </main>
+
+    <!-- Direct order form -->
+    <div id="checkout-modal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/60 p-4" aria-hidden="true">
+        <section class="relative w-full max-w-xl max-h-[92vh] overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl md:p-8" role="dialog" aria-modal="true" aria-labelledby="checkout-title">
+            <button type="button" onclick="closeCheckout()" class="absolute right-4 top-4 rounded-md px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100" aria-label="Fermer">
+                Fermer
+            </button>
+            <h2 id="checkout-title" class="mb-2 text-2xl font-bold text-brand-blue">Commander</h2>
+            <p class="mb-5 text-sm text-gray-600">Remplissez vos coordonnées. Nous vous contacterons pour confirmer la commande.</p>
+            <div id="order-summary" class="mb-5 rounded-lg bg-blue-50 p-4 text-sm text-gray-800"></div>
+            <form id="checkout-form" class="space-y-4">
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <label class="block text-sm font-medium text-gray-700">Prénom
+                        <input name="firstName" autocomplete="given-name" required maxlength="80" class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 font-normal focus:border-brand-blue focus:outline-none focus:ring-2 focus:ring-blue-200">
+                    </label>
+                    <label class="block text-sm font-medium text-gray-700">Nom
+                        <input name="lastName" autocomplete="family-name" required maxlength="80" class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 font-normal focus:border-brand-blue focus:outline-none focus:ring-2 focus:ring-blue-200">
+                    </label>
+                </div>
+                <label class="block text-sm font-medium text-gray-700">Numéro de téléphone
+                    <input name="phone" type="tel" autocomplete="tel" inputmode="tel" required maxlength="24" placeholder="06 00 00 00 00" class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 font-normal focus:border-brand-blue focus:outline-none focus:ring-2 focus:ring-blue-200">
+                </label>
+                <label class="block text-sm font-medium text-gray-700">Adresse de livraison
+                    <textarea name="address" autocomplete="street-address" required maxlength="500" rows="3" placeholder="Rue, quartier, ville" class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 font-normal focus:border-brand-blue focus:outline-none focus:ring-2 focus:ring-blue-200"></textarea>
+                </label>
+                <label class="block text-sm font-medium text-gray-700">Quantité
+                    <input id="order-quantity" name="quantity" type="number" min="1" max="20" value="1" required class="mt-1 w-28 rounded-md border border-gray-300 px-3 py-2 font-normal focus:border-brand-blue focus:outline-none focus:ring-2 focus:ring-blue-200">
+                </label>
+                <p id="checkout-message" class="hidden rounded-md px-3 py-2 text-sm" role="status" aria-live="polite"></p>
+                <div class="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:justify-end">
+                    <button type="button" onclick="closeCheckout()" class="rounded-md border border-gray-300 px-5 py-2.5 font-medium text-gray-700 hover:bg-gray-50">Annuler</button>
+                    <button id="submit-order-button" type="submit" class="rounded-md bg-brand-orange px-5 py-2.5 font-bold text-brand-blue hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-60">
+                        Envoyer ma commande
+                    </button>
+                </div>
+            </form>
+        </section>
+    </div>
+
+    <!-- Product details -->
+    <div id="product-detail-modal" class="fixed inset-0 z-[90] hidden items-center justify-center bg-black/60 p-4" aria-hidden="true">
+        <section class="relative grid w-full max-w-3xl gap-6 overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl md:grid-cols-2 md:p-8" role="dialog" aria-modal="true" aria-labelledby="detail-title">
+            <button type="button" onclick="closeProductDetails()" class="absolute right-4 top-4 rounded-md px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100" aria-label="Fermer">Fermer</button>
+            <img id="detail-image" src="" alt="" class="mt-8 aspect-square w-full rounded-xl bg-gray-50 object-cover md:mt-0">
+            <div class="flex flex-col justify-center pt-8 md:pt-0">
+                <p id="detail-brand" class="mb-2 text-sm font-semibold uppercase tracking-wide text-gray-500"></p>
+                <h2 id="detail-title" class="mb-3 pr-16 text-2xl font-bold text-brand-blue md:pr-0"></h2>
+                <p id="detail-description" class="mb-5 text-gray-600"></p>
+                <div class="mb-6">
+                    <span id="detail-old-price" class="mr-2 text-sm text-gray-400 line-through"></span>
+                    <span id="detail-price" class="text-2xl font-bold text-brand-blue"></span>
+                </div>
+                <button id="detail-order-button" type="button" class="w-full rounded-md bg-brand-orange px-5 py-3 font-bold text-brand-blue hover:brightness-95">Commander cet article</button>
+            </div>
+        </section>
+    </div>
+
+    <a href="https://wa.me/212652517115" onclick="openWhatsApp(event)" target="_blank" rel="noopener" aria-label="Contacter AZ TECH sur WhatsApp" class="fixed bottom-5 right-5 z-[80] rounded-full bg-green-600 px-5 py-3 font-bold text-white shadow-lg transition hover:bg-green-700">
+        <i class="fab fa-whatsapp mr-2" aria-hidden="true"></i>WhatsApp
+    </a>
+
+    <!-- Footer -->
+    <footer id="footer-contact" class="bg-brand-blue py-12 text-white">
+        <div class="container mx-auto px-4">
+            <div class="mb-8 grid grid-cols-1 gap-8 md:grid-cols-3">
+                <div>
+                    <p class="mb-3 text-2xl font-bold">AZ TECH</p>
+                    <p class="max-w-sm text-sm leading-6 text-white/75">Votre magasin d'électronique au Maroc. Parcourez les articles et commandez directement en ligne.</p>
+                </div>
+                <div>
+                    <h4 class="mb-4 font-bold">Nos catégories</h4>
+                    <div class="grid grid-cols-2 gap-3 text-sm text-white/80">
+                        <button onclick="switchTab('catalogue')" class="text-left hover:text-brand-orange">Tous les articles</button>
+                        <button onclick="switchTab('telephones')" class="text-left hover:text-brand-orange">Téléphones</button>
+                        <button onclick="switchTab('laptops')" class="text-left hover:text-brand-orange">Laptops</button>
+                        <button onclick="switchTab('accessoires')" class="text-left hover:text-brand-orange">Accessoires</button>
+                        <button onclick="switchTab('televiseurs')" class="text-left hover:text-brand-orange">Téléviseurs</button>
+                        <button onclick="switchTab('electromenagers')" class="text-left hover:text-brand-orange">Électroménager</button>
+                    </div>
+                </div>
+                <div>
+                    <h4 class="mb-4 font-bold">Contact WhatsApp</h4>
+                    <p class="mb-3 text-sm text-white/75">+212 652 517 115</p>
+                    <a href="https://wa.me/212652517115" onclick="openWhatsApp(event)" target="_blank" rel="noopener" class="inline-block rounded-md bg-brand-orange px-4 py-2 font-semibold text-brand-blue hover:brightness-95">Écrivez-nous</a>
+                </div>
+            </div>
+            <div class="border-t border-white/15 pt-5 text-center text-sm text-white/60">
+                <p>&copy; 2026 AZ TECH Maroc. Tous droits réservés.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // --- Mock Data ---
+        const products = [
+            // Phones
+            { id: 1, title: 'iPhone 15 Pro Max', brand: 'Apple', category: 'telephones', oldPrice: 15000, price: 13999, discount: 6, img: 'https://placehold.co/200x200/ffffff/1B263B?text=iPhone+15' },
+            { id: 2, title: 'Redmi Note 13 Pro', brand: 'Xiaomi', category: 'telephones', oldPrice: 3500, price: 2999, discount: 14, img: 'https://placehold.co/200x200/ffffff/1B263B?text=Redmi+Note' },
+            { id: 3, title: 'Galaxy S24 Ultra', brand: 'Samsung', category: 'telephones', oldPrice: 14500, price: 12900, discount: 11, img: 'https://placehold.co/200x200/ffffff/1B263B?text=S24+Ultra' },
+            { id: 4, title: 'Oppo Reno 11', brand: 'Oppo', category: 'telephones', oldPrice: 4800, price: 4200, discount: 12, img: 'https://placehold.co/200x200/ffffff/1B263B?text=Oppo+Reno' },
+            // Laptops
+            { id: 5, title: 'EliteBook 840 G8', brand: 'HP', category: 'laptops', oldPrice: 12000, price: 9500, discount: 20, img: 'https://placehold.co/200x200/ffffff/1B263B?text=HP+EliteBook' },
+            { id: 6, title: 'MacBook Air M2', brand: 'Apple', category: 'laptops', oldPrice: 13500, price: 11900, discount: 11, img: 'https://placehold.co/200x200/ffffff/1B263B?text=MacBook+Air' },
+            { id: 7, title: 'ThinkPad T14', brand: 'Lenovo', category: 'laptops', oldPrice: 11000, price: 8900, discount: 19, img: 'https://placehold.co/200x200/ffffff/1B263B?text=ThinkPad' },
+            { id: 8, title: 'Surface Laptop 5', brand: 'Microsoft', category: 'laptops', oldPrice: 14000, price: 12500, discount: 10, img: 'https://placehold.co/200x200/ffffff/1B263B?text=Surface' },
+            // Appliances
+            { id: 9, title: 'Machine à Café Magnifica', brand: 'DeLonghi', category: 'electromenagers', oldPrice: 5000, price: 4200, discount: 16, img: 'https://placehold.co/200x200/ffffff/1B263B?text=Cafe' },
+            { id: 10, title: 'Airfryer XXL', brand: 'Philips', category: 'electromenagers', oldPrice: 2500, price: 1899, discount: 24, img: 'https://placehold.co/200x200/ffffff/1B263B?text=Airfryer' },
+            { id: 11, title: 'Blender Chauffant', brand: 'Moulinex', category: 'electromenagers', oldPrice: 1200, price: 850, discount: 29, img: 'https://placehold.co/200x200/ffffff/1B263B?text=Blender' },
+            { id: 12, title: 'Aspirateur Sans Fil V15', brand: 'Dyson', category: 'electromenagers', oldPrice: 8500, price: 7200, discount: 15, img: 'https://placehold.co/200x200/ffffff/1B263B?text=Aspirateur' },
+            // Additional sale items. Prices are sample values and should be checked against current stock.
+            { id: 13, title: 'Galaxy A55 5G', brand: 'Samsung', category: 'telephones', oldPrice: 4299, price: 3799, discount: 12, description: 'Smartphone Samsung Galaxy A55 5G.', img: 'https://placehold.co/200x200/ffffff/1B263B?text=Galaxy+A55' },
+            { id: 14, title: 'iPhone 13 128 Go', brand: 'Apple', category: 'telephones', oldPrice: 5999, price: 5499, discount: 8, description: 'iPhone 13 avec 128 Go de stockage.', img: 'https://placehold.co/200x200/ffffff/1B263B?text=iPhone+13' },
+            { id: 15, title: 'Dell Latitude 5420', brand: 'Dell', category: 'laptops', oldPrice: 7500, price: 6900, discount: 8, description: 'Ordinateur portable Dell Latitude 5420.', img: 'https://placehold.co/200x200/ffffff/1B263B?text=Dell+Latitude' },
+            { id: 16, title: 'Lenovo IdeaPad Slim 3', brand: 'Lenovo', category: 'laptops', oldPrice: 6800, price: 6200, discount: 9, description: 'Ordinateur portable Lenovo IdeaPad Slim 3.', img: 'https://placehold.co/200x200/ffffff/1B263B?text=IdeaPad+Slim' },
+            { id: 17, title: 'Redmi Buds 5', brand: 'Xiaomi', category: 'accessoires', oldPrice: 599, price: 499, discount: 17, description: 'Écouteurs sans fil Redmi Buds 5.', img: 'https://placehold.co/200x200/ffffff/1B263B?text=Redmi+Buds+5' },
+            { id: 18, title: 'JBL Tune 520BT', brand: 'JBL', category: 'accessoires', oldPrice: 799, price: 699, discount: 13, description: 'Casque Bluetooth JBL Tune 520BT.', img: 'https://placehold.co/200x200/ffffff/1B263B?text=JBL+Tune+520BT' },
+            { id: 19, title: 'Chargeur USB-C 25W', brand: 'Samsung', category: 'accessoires', oldPrice: 299, price: 249, discount: 17, description: 'Chargeur secteur USB-C 25 W.', img: 'https://placehold.co/200x200/ffffff/1B263B?text=Chargeur+25W' },
+            { id: 20, title: 'Montre connectée X8', brand: 'AZ TECH', category: 'accessoires', oldPrice: 499, price: 399, discount: 20, description: 'Montre connectée avec écran tactile.', img: 'https://placehold.co/200x200/ffffff/1B263B?text=Montre+X8' },
+            { id: 21, title: 'Samsung Crystal UHD 55 pouces', brand: 'Samsung', category: 'televiseurs', oldPrice: 7299, price: 6499, discount: 11, description: 'Téléviseur Samsung Crystal UHD de 55 pouces.', img: 'https://placehold.co/200x200/ffffff/1B263B?text=Samsung+55+UHD' },
+            { id: 22, title: 'TCL QLED 55 pouces', brand: 'TCL', category: 'televiseurs', oldPrice: 6499, price: 5799, discount: 11, description: 'Téléviseur TCL QLED de 55 pouces.', img: 'https://placehold.co/200x200/ffffff/1B263B?text=TCL+55+QLED' },
+            { id: 23, title: 'LG UHD 50 pouces', brand: 'LG', category: 'televiseurs', oldPrice: 5999, price: 5499, discount: 8, description: 'Téléviseur LG UHD de 50 pouces.', img: 'https://placehold.co/200x200/ffffff/1B263B?text=LG+50+UHD' },
+        ];
+
+        // Paste the deployed Google Apps Script web app URL here to receive orders in Sheets.
+        const GOOGLE_SHEETS_WEB_APP_URL = 'PASTE_YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE';
+        const WHATSAPP_NUMBER = '212652517115';
+        let selectedProduct = null;
+
+        function openWhatsApp(event, message = 'Salam, bghit n3ref l-articles disponibles.') {
+            if (event) event.preventDefault();
+            const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+            window.open(url, '_blank', 'noopener,noreferrer');
+        }
+
+        function openProductDetails(productId) {
+            const product = products.find(item => item.id === productId);
+            if (!product) return;
+            document.getElementById('detail-image').src = product.img;
+            document.getElementById('detail-image').alt = product.title;
+            document.getElementById('detail-brand').textContent = product.brand;
+            document.getElementById('detail-title').textContent = product.title;
+            document.getElementById('detail-description').textContent = product.description || `Article ${product.title}, disponible à la commande chez AZ TECH.`;
+            document.getElementById('detail-old-price').textContent = product.oldPrice ? `${product.oldPrice.toLocaleString('fr-MA')} DH` : '';
+            document.getElementById('detail-price').textContent = `${product.price.toLocaleString('fr-MA')} DH`;
+            document.getElementById('detail-order-button').dataset.productId = product.id;
+            const modal = document.getElementById('product-detail-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            modal.setAttribute('aria-hidden', 'false');
+            document.body.classList.add('overflow-hidden');
+        }
+
+        function closeProductDetails() {
+            const modal = document.getElementById('product-detail-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            modal.setAttribute('aria-hidden', 'true');
+            document.body.classList.remove('overflow-hidden');
+        }
+
+        function openCheckout(productId) {
+            selectedProduct = products.find(product => product.id === productId);
+            if (!selectedProduct) return;
+            closeProductDetails();
+
+            const modal = document.getElementById('checkout-modal');
+            const message = document.getElementById('checkout-message');
+            document.getElementById('checkout-form').reset();
+            document.getElementById('order-quantity').value = '1';
+            const submitButton = document.getElementById('submit-order-button');
+            submitButton.classList.remove('hidden');
+            submitButton.disabled = false;
+            submitButton.textContent = 'Envoyer ma commande';
+            message.className = 'hidden rounded-md px-3 py-2 text-sm';
+            message.textContent = '';
+            updateOrderSummary();
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            modal.setAttribute('aria-hidden', 'false');
+            document.body.classList.add('overflow-hidden');
+            document.querySelector('#checkout-form [name="firstName"]').focus();
+        }
+
+        function closeCheckout() {
+            const modal = document.getElementById('checkout-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            modal.setAttribute('aria-hidden', 'true');
+            document.body.classList.remove('overflow-hidden');
+        }
+
+        function updateOrderSummary() {
+            if (!selectedProduct) return;
+            const quantity = Math.max(1, Math.min(20, Number(document.getElementById('order-quantity').value) || 1));
+            const total = selectedProduct.price * quantity;
+            document.getElementById('order-summary').innerHTML = `
+                <div class="flex items-center justify-between gap-4">
+                    <span><strong>${selectedProduct.title}</strong><br>${selectedProduct.price.toLocaleString('fr-MA')} DH &times; ${quantity}</span>
+                    <strong class="whitespace-nowrap text-brand-blue">${total.toLocaleString('fr-MA')} DH</strong>
+                </div>`;
+        }
+
+        function normalizeText(value) {
+            return String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+        }
+
+        function searchProducts(event) {
+            event.preventDefault();
+            const query = document.getElementById('search-input').value.trim();
+            const normalizedQuery = normalizeText(query);
+            const matches = normalizedQuery
+                ? products.filter(product => normalizeText(`${product.title} ${product.brand} ${product.category}`).includes(normalizedQuery))
+                : products;
+
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.add('hidden');
+                tab.classList.remove('block');
+            });
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('text-brand-blue', 'border-b-2', 'border-brand-blue', 'font-bold', 'pb-1');
+                link.classList.add('text-gray-600');
+            });
+            document.getElementById('search-results').classList.remove('hidden');
+            document.getElementById('search-results-title').textContent = query ? `Résultats pour « ${query} »` : 'Tous les articles';
+            const container = document.getElementById('search-results-container');
+            container.innerHTML = matches.length
+                ? matches.map(createProductCard).join('')
+                : '<p class="col-span-full rounded-lg border border-gray-200 bg-white p-6 text-gray-600">Aucun article trouvé. Essayez une autre recherche ou contactez-nous sur WhatsApp.</p>';
+            document.getElementById('search-results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function showCheckoutMessage(message, isError = false) {
+            const element = document.getElementById('checkout-message');
+            element.className = `rounded-md px-3 py-2 text-sm ${isError ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'}`;
+            element.textContent = message;
+        }
+
+        document.getElementById('order-quantity').addEventListener('input', updateOrderSummary);
+        document.getElementById('checkout-modal').addEventListener('click', event => {
+            if (event.target.id === 'checkout-modal') closeCheckout();
+        });
+        document.getElementById('checkout-form').addEventListener('submit', async event => {
+            event.preventDefault();
+            if (!selectedProduct) return;
+
+            const form = event.currentTarget;
+            const formData = new FormData(form);
+            const quantity = Math.max(1, Math.min(20, Number(formData.get('quantity')) || 1));
+            const order = {
+                firstName: String(formData.get('firstName')).trim(),
+                lastName: String(formData.get('lastName')).trim(),
+                phone: String(formData.get('phone')).trim(),
+                address: String(formData.get('address')).trim(),
+                productId: selectedProduct.id,
+                product: selectedProduct.title,
+                quantity,
+                unitPrice: selectedProduct.price,
+                total: selectedProduct.price * quantity,
+                currency: 'MAD',
+                createdAt: new Date().toISOString()
+            };
+
+            if (!GOOGLE_SHEETS_WEB_APP_URL.startsWith('https://script.google.com/macros/s/')) {
+                const message = [
+                    'Salam AZ TECH, bghit ncommander:',
+                    `Produit: ${order.product}`,
+                    `Quantite: ${order.quantity}`,
+                    `Total: ${order.total.toLocaleString('fr-MA')} DH`,
+                    `Smiya: ${order.firstName} ${order.lastName}`,
+                    `Telephone: ${order.phone}`,
+                    `Adresse: ${order.address}`
+                ].join('\n');
+                openWhatsApp(null, message);
+                showCheckoutMessage('WhatsApp s’est ouvert avec votre commande. Appuyez sur Envoyer pour nous la transmettre.');
+                return;
+            }
+
+            const submitButton = document.getElementById('submit-order-button');
+            submitButton.disabled = true;
+            submitButton.textContent = 'Envoi en cours...';
+            try {
+                // Apps Script does not expose CORS headers; no-cors sends the simple POST to doPost.
+                await fetch(GOOGLE_SHEETS_WEB_APP_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify(order)
+                });
+                form.reset();
+                showCheckoutMessage('Merci ! Votre commande a ete transmise. Nous vous contacterons pour la confirmer.');
+                submitButton.classList.add('hidden');
+            } catch (error) {
+                showCheckoutMessage('Envoi impossible. Verifiez votre connexion puis reessayez.', true);
+            } finally {
+                submitButton.disabled = false;
+                if (!submitButton.classList.contains('hidden')) submitButton.textContent = 'Envoyer ma commande';
+            }
+        });
+
+        // --- UI Rendering ---
+        function createProductCard(product) {
+            return `
+                <article class="flex h-full flex-col rounded-xl border border-gray-200 bg-white p-3 shadow-sm transition hover:border-brand-orange hover:shadow-md md:p-4">
+                    ${product.discount ? `<span class="mb-3 w-fit rounded bg-brand-orange px-2 py-1 text-xs font-bold text-brand-blue">-${product.discount}%</span>` : '<span class="mb-3 h-6"></span>'}
+                    <button type="button" onclick="openProductDetails(${product.id})" class="block w-full text-left">
+                        <div class="mb-4 aspect-square overflow-hidden rounded-lg bg-gray-50">
+                            <img src="${product.img}" alt="${product.title}" loading="lazy" class="h-full w-full object-contain transition duration-300 hover:scale-[1.03]">
+                        </div>
+                        <span class="text-xs font-semibold uppercase tracking-wide text-gray-500">${product.brand}</span>
+                        <h3 class="mt-1 min-h-12 font-semibold leading-snug text-brand-blue">${product.title}</h3>
+                        <span class="mt-3 block text-sm text-gray-400 line-through">${product.oldPrice ? `${product.oldPrice.toLocaleString('fr-MA')} DH` : ''}</span>
+                        <span class="block text-xl font-bold text-brand-blue">${product.price.toLocaleString('fr-MA')} <span class="text-sm">DH</span></span>
+                        <span class="mt-2 inline-block text-sm font-semibold text-brand-blue underline underline-offset-4">Voir les détails</span>
+                    </button>
+                    <button type="button" onclick="openCheckout(${product.id})" class="mt-auto w-full rounded-md bg-brand-orange py-2.5 font-bold text-brand-blue transition hover:brightness-95">
+                        Commander
+                    </button>
+                </article>
+            `;
+        }
+
+        function renderProducts() {
+            const categories = {
+                telephones: 'telephones-products-container',
+                laptops: 'laptops-products-container',
+                electromenagers: 'electromenagers-products-container',
+                accessoires: 'accessoires-products-container',
+                televiseurs: 'televiseurs-products-container'
+            };
+            Object.entries(categories).forEach(([category, containerId]) => {
+                document.getElementById(containerId).innerHTML = products.filter(product => product.category === category).map(createProductCard).join('');
+            });
+            document.getElementById('all-products-container').innerHTML = products.map(createProductCard).join('');
+
+            const featured = [
+                products.find(p => p.id === 1),
+                products.find(p => p.id === 2),
+                products.find(p => p.id === 5),
+                products.find(p => p.id === 13),
+                products.find(p => p.id === 18),
+                products.find(p => p.id === 21),
+                products.find(p => p.id === 10),
+                products.find(p => p.id === 17),
+            ];
+            document.getElementById('featured-products-container').innerHTML = featured.map(createProductCard).join('');
+        }
+
+        // --- Tab Switching Logic ---
+        function switchTab(tabId) {
+            document.getElementById('search-results').classList.add('hidden');
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.add('hidden');
+                tab.classList.remove('block');
+            });
+
+            const activeTab = document.getElementById(`tab-${tabId}`);
+            if (activeTab) {
+                activeTab.classList.remove('hidden');
+                activeTab.classList.add('block');
+            }
+
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('text-brand-blue', 'border-b-2', 'border-brand-blue', 'font-bold', 'pb-1');
+                link.classList.add('text-gray-600');
+            });
+
+            const activeNav = document.getElementById(`nav-${tabId}`);
+            if (activeNav) {
+                activeNav.classList.remove('text-gray-600');
+                activeNav.classList.add('text-brand-blue', 'border-b-2', 'border-brand-blue', 'font-bold', 'pb-1');
+            }
+        }
+
+        // --- Initialization ---
+        document.addEventListener('DOMContentLoaded', () => {
+            renderProducts();
+            document.getElementById('detail-order-button').addEventListener('click', event => {
+                openCheckout(Number(event.currentTarget.dataset.productId));
+            });
+            document.getElementById('product-detail-modal').addEventListener('click', event => {
+                if (event.target.id === 'product-detail-modal') closeProductDetails();
+            });
+            document.addEventListener('keydown', event => {
+                if (event.key !== 'Escape') return;
+                if (!document.getElementById('product-detail-modal').classList.contains('hidden')) closeProductDetails();
+                else if (!document.getElementById('checkout-modal').classList.contains('hidden')) closeCheckout();
+            });
+        });
+
+    </script>
+</body>
+</html>
