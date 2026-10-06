@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,7 +12,7 @@
             theme: {
                 extend: {
                     fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
+                        sans: ['Noto Sans Arabic', 'Inter', 'sans-serif'],
                     },
                     colors: {
                         brand: {
@@ -26,10 +26,12 @@
         }
     </script>
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f7f8fa; }
+        body { font-family: 'Noto Sans Arabic', 'Inter', sans-serif; background-color: #f7f8fa; }
         .hide-scroll::-webkit-scrollbar { display: none; }
         .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
         button, a { -webkit-tap-highlight-color: transparent; }
+        [dir="rtl"] #whatsapp-button { right: auto; left: 1.25rem; }
+        [dir="rtl"] .modal-close { right: auto; left: 1rem; }
     </style>
 </head>
 <body class="text-gray-800">
@@ -37,10 +39,10 @@
     <!-- Top Bar -->
     <div class="bg-brand-blue text-xs text-white/90 py-2">
         <div class="container mx-auto px-4 flex justify-between items-center">
-            <span>Livraison partout au Maroc</span>
-            <div class="flex items-center space-x-4">
-                <a href="#" onclick="openWhatsApp(event, 'Salam, bghit ntabe3 talabi.')" class="hover:text-brand-orange">Suivi de commande</a>
-                <a href="#" onclick="openWhatsApp(event)" class="hover:text-brand-orange">Contact</a>
+            <span data-i18n="shipping">توصيل لجميع أنحاء المغرب</span>
+            <div class="flex items-center gap-4">
+                <a href="#" onclick="openWhatsApp(event, 'Salam, bghit ntabe3 talabi.')" class="hover:text-brand-orange" data-i18n="track">تتبع الطلب</a>
+                <a href="#" onclick="openWhatsApp(event)" class="hover:text-brand-orange" data-i18n="contact">اتصل بنا</a>
             </div>
         </div>
     </div>
@@ -53,20 +55,23 @@
                 <a href="#" onclick="switchTab('accueil')" class="text-2xl font-bold flex items-center gap-2">
                     <span>AZ TECH</span>
                 </a>
+                <button id="language-toggle" type="button" onclick="toggleLanguage()" class="flex items-center gap-2 rounded-md border border-white/30 px-3 py-2 text-sm font-semibold transition hover:bg-white/10" aria-label="Passer en français" title="Passer en français">
+                    <i class="fa-solid fa-language text-lg" aria-hidden="true"></i><span id="language-toggle-label">FR</span>
+                </button>
             </div>
 
             <!-- Search Bar -->
             <div class="flex-grow max-w-2xl w-full lg:w-auto order-3 lg:order-2">
                 <form id="search-form" class="relative flex w-full" onsubmit="searchProducts(event)">
-                    <input id="search-input" type="search" placeholder="Cherchez un produit, une marque..." class="w-full py-2.5 px-4 rounded-l-md text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-orange">
+                    <input id="search-input" type="search" data-i18n-placeholder="searchPlaceholder" placeholder="ابحث عن منتج أو علامة تجارية..." class="w-full py-2.5 px-4 rounded-md text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-orange">
                     <button type="submit" class="bg-brand-orange hover:brightness-95 text-brand-blue font-semibold py-2 px-5 rounded-r-md transition">
-                        Rechercher
+                        <span data-i18n="search">بحث</span>
                     </button>
                 </form>
             </div>
 
             <div class="hidden lg:block text-sm font-medium text-white/90 order-2 lg:order-3">
-                Commande rapide et livraison partout au Maroc
+                <span data-i18n="quickOrder">طلب سريع وتوصيل لجميع أنحاء المغرب</span>
             </div>
         </div>
 
