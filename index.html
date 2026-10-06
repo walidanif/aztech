@@ -46,6 +46,9 @@
             <div class="flex items-center gap-4">
                 <a href="#" onclick="openWhatsApp(event, 'Salam, bghit ntabe3 talabi.')" class="hover:text-brand-orange" data-i18n="track">تتبع الطلب</a>
                 <a href="#" onclick="openWhatsApp(event)" class="hover:text-brand-orange" data-i18n="contact">اتصل بنا</a>
+                <button id="language-toggle" type="button" onclick="toggleLanguage()" class="inline-flex items-center gap-1 rounded px-1.5 py-1 text-[11px] font-semibold transition hover:text-brand-orange" aria-label="Passer en français" title="Passer en français">
+                    <i class="fa-solid fa-language text-sm" aria-hidden="true"></i><span id="language-toggle-label">FR</span>
+                </button>
             </div>
         </div>
     </div>
@@ -58,9 +61,6 @@
                 <a href="#" onclick="switchTab('accueil')" class="text-2xl font-bold flex items-center gap-2">
                     <img src="assets/az-tech-logo.svg" alt="AZ TECH" class="h-10 w-auto">
                 </a>
-                <button id="language-toggle" type="button" onclick="toggleLanguage()" class="flex items-center gap-2 rounded-md border border-white/30 px-3 py-2 text-sm font-semibold transition hover:bg-white/10" aria-label="Passer en français" title="Passer en français">
-                    <i class="fa-solid fa-language text-lg" aria-hidden="true"></i><span id="language-toggle-label">FR</span>
-                </button>
             </div>
 
             <!-- Search Bar -->
@@ -317,11 +317,11 @@
             { id: 15, title: 'Dell Latitude 5420', brand: 'Dell', category: 'laptops', oldPrice: 7500, price: 6900, discount: 8, description: 'Ordinateur portable Dell Latitude 5420.', img: 'assets/products/dell-latitude-5420.jpg' },
             { id: 16, title: 'Lenovo IdeaPad Slim 3', brand: 'Lenovo', category: 'laptops', oldPrice: 6800, price: 6200, discount: 9, description: 'Ordinateur portable Lenovo IdeaPad Slim 3.', img: 'assets/products/lenovo-ideapad-slim-3.jpg' },
             { id: 17, title: 'Redmi Buds 5', brand: 'Xiaomi', category: 'accessoires', oldPrice: 599, price: 499, discount: 17, description: 'Écouteurs sans fil Redmi Buds 5.', img: 'assets/products/redmi-buds-5.jpg' },
-            { id: 18, title: 'JBL Tune 520BT', brand: 'JBL', category: 'accessoires', oldPrice: 799, price: 699, discount: 13, description: 'Casque Bluetooth JBL Tune 520BT.', img: 'https://pcx.com.ph/cdn/shop/files/HS-JBL-TUNE-520BT-BLACK-2.jpg?v=1712541471&width=1090' },
+            { id: 18, title: 'JBL Tune 520BT', brand: 'JBL', category: 'accessoires', oldPrice: 799, price: 699, discount: 13, description: 'Casque Bluetooth JBL Tune 520BT.', img: 'https://indexiq.ru/storage/tiny/JBL/Tune-520BT/JBL-Tune-520BT-05.jpeg' },
             { id: 19, title: 'Chargeur USB-C 25W', brand: 'Samsung', category: 'accessoires', oldPrice: 299, price: 249, discount: 17, description: 'Chargeur secteur USB-C 25 W.', img: 'assets/products/samsung-25w-charger.jpg' },
             { id: 20, title: 'Montre connectée X8', brand: 'AZ TECH', category: 'accessoires', oldPrice: 499, price: 399, discount: 20, description: 'Montre connectée avec écran tactile.', img: 'assets/products/smartwatch-x8.jpg' },
             { id: 21, title: 'Samsung Crystal UHD 55 pouces', brand: 'Samsung', category: 'televiseurs', oldPrice: 7299, price: 6499, discount: 11, description: 'Téléviseur Samsung Crystal UHD de 55 pouces.', img: 'assets/products/samsung-crystal-uhd-55.png' },
-            { id: 22, title: 'TCL QLED 55 pouces', brand: 'TCL', category: 'televiseurs', oldPrice: 6499, price: 5799, discount: 11, description: 'Téléviseur TCL QLED de 55 pouces.', img: 'https://electronicparadise.in/cdn/shop/files/MAIN_12.jpg?v=1707402575&width=1406' },
+            { id: 22, title: 'TCL QLED 55 pouces', brand: 'TCL', category: 'televiseurs', oldPrice: 6499, price: 5799, discount: 11, description: 'Téléviseur TCL QLED de 55 pouces.', img: 'https://electroexpert.ma/cdn/shop/files/IMG-0717.jpg?v=1775179072' },
             { id: 23, title: 'LG UHD 50 pouces', brand: 'LG', category: 'televiseurs', oldPrice: 5999, price: 5499, discount: 8, description: 'Téléviseur LG UHD de 50 pouces.', img: 'assets/products/lg-uhd-50.jpg' },
         ];
 
