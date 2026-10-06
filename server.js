@@ -48,7 +48,13 @@ async function supabaseRequest(resource, options = {}) {
         throw new Error(`Supabase request failed (${response.status}): ${detail.slice(0, 300)}`);
     }
     if (response.status === 204) return null;
-    return response.json();
+    const body = await response.text();
+    if (!body) return null;
+    try {
+        return JSON.parse(body);
+    } catch {
+        throw new Error('Supabase returned an invalid JSON response.');
+    }
 }
 
 async function createSupabaseImageUpload(filename) {
