@@ -683,7 +683,9 @@ async function handleRequest(req, res) {
     try {
         const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
         if (url.pathname.startsWith('/api/')) {
-            if (IS_VERCEL) await initializeStore();
+            if (IS_VERCEL && url.pathname !== '/api/platform' && url.pathname !== '/api/catalog-events') {
+                await initializeStore();
+            }
             await handleApi(req, res, url);
         } else {
             await serveStatic(req, res, url);

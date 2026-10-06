@@ -2,6 +2,9 @@
   "functions": {
     "api/[...path].js": {
       "includeFiles": "data/products.json"
+    },
+    "api/admin/[...path].js": {
+      "includeFiles": "data/products.json"
     }
   },
   "rewrites": [

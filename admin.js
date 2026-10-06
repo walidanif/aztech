@@ -26,7 +26,18 @@ async function api(url, options = {}) {
             ...options.headers
         }
     });
-    const data = response.status === 204 ? {} : await response.json();
+    let data = {};
+    if (response.status !== 204) {
+        const contentType = response.headers.get('content-type') || '';
+        if (!contentType.includes('application/json')) {
+            throw new Error(`L’API a répondu avec une page inattendue (HTTP ${response.status}). Vérifiez le déploiement et les logs Vercel.`);
+        }
+        try {
+            data = await response.json();
+        } catch {
+            throw new Error(`La réponse de l’API est invalide (HTTP ${response.status}). Vérifiez les logs Vercel.`);
+        }
+    }
     if (!response.ok) {
         if (response.status === 401 && url !== '/api/admin/login' && url !== '/api/admin/change-password') showLogin();
         throw new Error(data.error || `Request failed (${response.status}).`);
