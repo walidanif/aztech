@@ -223,6 +223,14 @@ function formatDate(value) {
     return new Intl.DateTimeFormat('fr-MA', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
 }
 
+function localDateKey(value) {
+    const date = new Date(value);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
 function formatOrderItems(order) {
     return order.items.map(item => `${item.title} × ${item.quantity}`).join(', ');
 }
@@ -257,6 +265,7 @@ function renderOrders(unreadCount = orderUnreadCount) {
     document.getElementById('orders-stat-pending').textContent = counts.pending;
     document.getElementById('orders-stat-confirmed').textContent = counts.confirmed;
     document.getElementById('orders-stat-delivered').textContent = counts.delivered;
+    document.getElementById('orders-stat-cancelled').textContent = counts.cancelled;
     document.getElementById('orders-stat-revenue').textContent = formatPrice(
         orders.filter(order => order.status === 'delivered').reduce((sum, order) => sum + order.total, 0)
     );
@@ -285,7 +294,7 @@ function renderOrders(unreadCount = orderUnreadCount) {
     const confirmer = adminFilter.value;
     const filtered = orders.filter(order => {
         const text = `${order.id} ${order.customer.firstName} ${order.customer.lastName} ${order.customer.phone} ${order.customer.address} ${formatOrderItems(order)}`.toLocaleLowerCase();
-        const day = order.createdAt.slice(0, 10);
+        const day = localDateKey(order.createdAt);
         return (!query || text.includes(query))
             && (!status || order.status === status)
             && (!from || day >= from)
