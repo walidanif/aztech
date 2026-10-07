@@ -43,9 +43,15 @@
         button, a { -webkit-tap-highlight-color: transparent; }
         .nav-link { display: inline-flex; min-height: 40px; align-items: center; }
         .nav-link.text-brand-blue { color: #e5091b; border-color: #e5091b; }
-        .brand-wordmark { letter-spacing: -.06em; }
-        .brand-wordmark .brand-a { color: #d1d2d6; }
+        .brand-wordmark { display: inline-flex; align-items: center; gap: .55rem; white-space: nowrap; }
+        .brand-wordmark-initials { display: inline-flex; font-size: 2.2rem; font-weight: 900; letter-spacing: -.09em; line-height: 1; }
+        .brand-wordmark .brand-a { color: #f3f4f6; }
         .brand-wordmark .brand-z { color: #e5091b; }
+        .brand-wordmark-copy { display: flex; flex-direction: column; align-items: flex-start; line-height: .95; }
+        .brand-wordmark-tech { color: #fff; font-size: 1.12rem; font-weight: 900; letter-spacing: .08em; }
+        .brand-wordmark-maroc { margin-top: .3rem; color: #d1d2d6; font-size: .62rem; font-weight: 700; letter-spacing: .38em; }
+        .category-banner-image { transform: scale(1); transition: transform .3s ease; }
+        .category-banner:hover .category-banner-image { transform: scale(1.06); }
         .hero-banner { background: radial-gradient(ellipse at 85% 15%, #252529 0%, #101012 54%, #080809 100%); }
         .drawer-backdrop[aria-hidden="true"] { display: none; }
     </style>
@@ -76,9 +82,12 @@
                 </button>
             </div>
 
-            <a href="#" onclick="switchTab('accueil')" class="absolute left-1/2 flex w-48 -translate-x-1/2 items-center justify-center sm:w-52 lg:static lg:w-auto lg:translate-x-0 lg:flex-none lg:justify-start" aria-label="AZ TECH Maroc, accueil">
-                    <img src="assets/az-tech-logo.png" alt="AZ TECH Maroc" class="h-[4.5rem] w-full max-w-[12rem] object-contain sm:h-20 sm:max-w-[13rem] lg:h-24 lg:w-56 lg:max-w-none">
-                </a>
+            <a href="#" onclick="switchTab('accueil')" class="absolute left-1/2 flex -translate-x-1/2 items-center justify-center lg:static lg:translate-x-0 lg:flex-none lg:justify-start" aria-label="AZ TECH Maroc, accueil">
+                <span class="brand-wordmark" aria-hidden="true">
+                    <span class="brand-wordmark-initials"><span class="brand-a">A</span><span class="brand-z">Z</span></span>
+                    <span class="brand-wordmark-copy"><span class="brand-wordmark-tech">TECH</span><span class="brand-wordmark-maroc">MAROC</span></span>
+                </span>
+            </a>
 
             <div class="hidden min-w-0 max-w-xl flex-1 lg:block">
                 <form id="search-form" class="relative flex w-full items-center gap-2" onsubmit="searchProducts(event)">
@@ -187,32 +196,28 @@
             </div>
 
             <!-- Categories -->
-            <section class="mb-10">
-                <h3 class="text-xl font-bold mb-6 border-b-2 border-brand-orange inline-block pb-1" data-i18n="categories">الأصناف</h3>
-                <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-                    <button onclick="switchTab('telephones')" class="group flex min-h-28 flex-col items-center justify-center gap-3 rounded-xl border border-gray-200 bg-white p-4 text-center font-semibold text-brand-blue shadow-sm transition hover:-translate-y-0.5 hover:border-brand-orange hover:shadow-md">
-                        <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-red-50 text-xl text-brand-orange transition group-hover:bg-brand-orange group-hover:text-white"><i class="fa-solid fa-mobile-screen-button" aria-hidden="true"></i></span>
-                        <span data-i18n="phones">الهواتف</span>
+            <section class="mb-10" aria-labelledby="categories-title">
+                <h3 id="categories-title" class="mb-5 text-center text-lg font-extrabold uppercase tracking-[0.18em] text-brand-blue sm:text-xl" data-i18n="categories">الأصناف</h3>
+                <div class="mx-auto grid max-w-5xl grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    <button onclick="switchTab('telephones')" class="category-banner group flex h-24 w-full items-center overflow-hidden rounded-md bg-gradient-to-r from-teal-400 to-sky-900 text-left shadow-md transition hover:-translate-y-0.5 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-brand-orange">
+                        <span class="h-full w-[40%] shrink-0 overflow-hidden bg-white"><img src="assets/products/iphone-15-pro-max.jpg" alt="" loading="lazy" class="category-banner-image h-full w-full object-cover"></span>
+                        <span class="flex-1 px-3 text-right text-lg font-extrabold italic text-white drop-shadow-md sm:text-xl" data-i18n="phones">الهواتف</span>
                     </button>
-                    <button onclick="switchTab('laptops')" class="group flex min-h-28 flex-col items-center justify-center gap-3 rounded-xl border border-gray-200 bg-white p-4 text-center font-semibold text-brand-blue shadow-sm transition hover:-translate-y-0.5 hover:border-brand-orange hover:shadow-md">
-                        <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-red-50 text-xl text-brand-orange transition group-hover:bg-brand-orange group-hover:text-white"><i class="fa-solid fa-laptop" aria-hidden="true"></i></span>
-                        <span data-i18n="laptops">الحواسيب المحمولة</span>
+                    <button onclick="switchTab('televiseurs')" class="category-banner group flex h-24 w-full items-center overflow-hidden rounded-md bg-gradient-to-r from-yellow-400 to-orange-500 text-left shadow-md transition hover:-translate-y-0.5 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-brand-orange">
+                        <span class="h-full w-[40%] shrink-0 overflow-hidden bg-white"><img src="assets/products/samsung-crystal-uhd-55.png" alt="" loading="lazy" class="category-banner-image h-full w-full object-cover"></span>
+                        <span class="flex-1 px-3 text-right text-lg font-extrabold italic text-white drop-shadow-md sm:text-xl" data-i18n="tvs">التلفزيونات</span>
                     </button>
-                    <button onclick="switchTab('accessoires')" class="group flex min-h-28 flex-col items-center justify-center gap-3 rounded-xl border border-gray-200 bg-white p-4 text-center font-semibold text-brand-blue shadow-sm transition hover:-translate-y-0.5 hover:border-brand-orange hover:shadow-md">
-                        <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-red-50 text-xl text-brand-orange transition group-hover:bg-brand-orange group-hover:text-white"><i class="fa-solid fa-headphones" aria-hidden="true"></i></span>
-                        <span data-i18n="accessories">الإكسسوارات</span>
+                    <button onclick="switchTab('laptops')" class="category-banner group flex h-24 w-full items-center overflow-hidden rounded-md bg-gradient-to-r from-violet-500 to-indigo-900 text-left shadow-md transition hover:-translate-y-0.5 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-brand-orange">
+                        <span class="h-full w-[40%] shrink-0 overflow-hidden bg-white"><img src="assets/products/hp-elitebook-840-g8.png" alt="" loading="lazy" class="category-banner-image h-full w-full object-cover"></span>
+                        <span class="flex-1 px-3 text-right text-lg font-extrabold italic text-white drop-shadow-md sm:text-xl" data-i18n="laptops">الحواسيب المحمولة</span>
                     </button>
-                    <button onclick="switchTab('televiseurs')" class="group flex min-h-28 flex-col items-center justify-center gap-3 rounded-xl border border-gray-200 bg-white p-4 text-center font-semibold text-brand-blue shadow-sm transition hover:-translate-y-0.5 hover:border-brand-orange hover:shadow-md">
-                        <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-red-50 text-xl text-brand-orange transition group-hover:bg-brand-orange group-hover:text-white"><i class="fa-solid fa-tv" aria-hidden="true"></i></span>
-                        <span data-i18n="tvs">التلفزيونات</span>
+                    <button onclick="switchTab('accessoires')" class="category-banner group flex h-24 w-full items-center overflow-hidden rounded-md bg-gradient-to-r from-cyan-500 to-blue-900 text-left shadow-md transition hover:-translate-y-0.5 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-brand-orange">
+                        <span class="h-full w-[40%] shrink-0 overflow-hidden bg-white"><img src="assets/products/redmi-buds-5.jpg" alt="" loading="lazy" class="category-banner-image h-full w-full object-cover"></span>
+                        <span class="flex-1 px-3 text-right text-lg font-extrabold italic text-white drop-shadow-md sm:text-xl" data-i18n="accessories">الإكسسوارات</span>
                     </button>
-                    <button onclick="switchTab('electromenagers')" class="group flex min-h-28 flex-col items-center justify-center gap-3 rounded-xl border border-gray-200 bg-white p-4 text-center font-semibold text-brand-blue shadow-sm transition hover:-translate-y-0.5 hover:border-brand-orange hover:shadow-md">
-                        <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-red-50 text-xl text-brand-orange transition group-hover:bg-brand-orange group-hover:text-white"><i class="fa-solid fa-blender" aria-hidden="true"></i></span>
-                        <span data-i18n="appliances">الأجهزة المنزلية</span>
-                    </button>
-                    <button onclick="switchTab('catalogue')" class="group flex min-h-28 flex-col items-center justify-center gap-3 rounded-xl border border-gray-200 bg-white p-4 text-center font-semibold text-brand-blue shadow-sm transition hover:-translate-y-0.5 hover:border-brand-orange hover:shadow-md">
-                        <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-red-50 text-xl text-brand-orange transition group-hover:bg-brand-orange group-hover:text-white"><i class="fa-solid fa-border-all" aria-hidden="true"></i></span>
-                        <span data-i18n="viewAll">عرض الكل</span>
+                    <button onclick="switchTab('electromenagers')" class="category-banner group flex h-24 w-full items-center overflow-hidden rounded-md bg-gradient-to-r from-emerald-400 to-green-900 text-left shadow-md transition hover:-translate-y-0.5 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-brand-orange">
+                        <span class="h-full w-[40%] shrink-0 overflow-hidden bg-white"><img src="assets/products/delonghi-magnifica.jpg" alt="" loading="lazy" class="category-banner-image h-full w-full object-cover"></span>
+                        <span class="flex-1 px-3 text-right text-lg font-extrabold italic text-white drop-shadow-md sm:text-xl" data-i18n="appliances">الأجهزة المنزلية</span>
                     </button>
                 </div>
             </section>
@@ -406,8 +411,11 @@
         <div class="container mx-auto px-4">
             <div class="mb-8 grid grid-cols-1 gap-8 md:grid-cols-3">
                 <div>
-                    <div class="mb-3 flex items-center gap-2">
-                        <img src="assets/az-tech-logo.png" alt="AZ TECH Maroc" class="h-20 w-32 object-contain">
+                    <div class="mb-3 flex items-center gap-2" role="img" aria-label="AZ TECH Maroc">
+                        <span class="brand-wordmark">
+                            <span class="brand-wordmark-initials"><span class="brand-a">A</span><span class="brand-z">Z</span></span>
+                            <span class="brand-wordmark-copy"><span class="brand-wordmark-tech">TECH</span><span class="brand-wordmark-maroc">MAROC</span></span>
+                        </span>
                     </div>
                     <p class="max-w-sm text-sm leading-6 text-white/75" data-i18n="footerAbout">متجركم للإلكترونيات في المغرب. تصفحوا المنتجات وأرسلوا طلباتكم مباشرة.</p>
                 </div>
