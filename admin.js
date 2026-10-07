@@ -330,7 +330,7 @@ function renderOrders(unreadCount = orderUnreadCount) {
     document.getElementById('orders-empty').classList.toggle('hidden', filtered.length > 0);
     body.querySelectorAll('[data-order-view]').forEach(button => button.addEventListener('click', () => openOrderDialog(button.dataset.orderView)));
     body.querySelectorAll('[data-order-edit]').forEach(button => button.addEventListener('click', () => openOrderDialog(button.dataset.orderEdit, true)));
-    body.querySelectorAll('[data-order-status]').forEach(button => button.addEventListener('click', () => updateOrderStatus(button.dataset.orderId, button.dataset.orderStatus)));
+    body.querySelectorAll('[data-order-status]').forEach(button => button.addEventListener('click', () => updateOrderStatus(button.dataset.orderId, button.dataset.orderStatus, button)));
 }
 
 function renderOrderItemEditors() {
@@ -398,20 +398,39 @@ function openOrderDialog(orderId, editing = false) {
     document.getElementById('order-dialog').showModal();
 }
 
-async function updateOrderStatus(orderId, status) {
+async function updateOrderStatus(orderId, status, actionButton = null) {
     const order = orders.find(item => item.id === orderId);
     if (!order) return;
     const action = { confirmed: 'confirmer', delivered: 'marquer comme livrée', cancelled: 'annuler' }[status];
     if (!window.confirm(`Voulez-vous ${action} la commande de ${order.customer.firstName} ${order.customer.lastName} ?`)) return;
+    if (actionButton) {
+        actionButton.disabled = true;
+        actionButton.textContent = 'En cours...';
+    }
     try {
         const result = await api(`/api/admin/orders/${orderId}/status`, { method: 'POST', body: JSON.stringify({ status }) });
+        if (result.order) {
+            orders = orders.map(item => item.id === orderId ? result.order : item);
+            renderOrders();
+        }
         showMessage('orders-message', result.sheetsSynced
             ? `Commande ${ORDER_STATUS_LABELS[status].toLocaleLowerCase()} et synchronisée avec Google Sheets.`
-            : `Commande ${ORDER_STATUS_LABELS[status].toLocaleLowerCase()} dans l’administration, mais la synchronisation Sheets a échoué.`, !result.sheetsSynced);
-        await Promise.all([loadOrders(), loadAudit()]);
+            : `Commande ${ORDER_STATUS_LABELS[status].toLocaleLowerCase()} et enregistrée. La synchronisation Google Sheets a échoué ; vérifiez le journal d’activité.`, !result.sheetsSynced);
+        try {
+            await loadOrders();
+        } catch (error) {
+            console.error('The order status was saved, but the order list could not be refreshed:', error);
+            showMessage('orders-message', `Commande ${ORDER_STATUS_LABELS[status].toLocaleLowerCase()} enregistrée, mais la liste n’a pas pu être actualisée. Cliquez sur « Actualiser ».`, true);
+        }
+        loadAudit().catch(error => console.error('The order status was saved, but the activity log could not be refreshed:', error));
         if (activeOrder?.id === orderId && document.getElementById('order-dialog').open) openOrderDialog(orderId);
     } catch (error) {
         showMessage('orders-message', error.message, true);
+    } finally {
+        if (actionButton?.isConnected) {
+            actionButton.disabled = false;
+            actionButton.textContent = { confirmed: 'Confirmer', delivered: 'Livrée', cancelled: 'Annuler' }[status];
+        }
     }
 }
 
@@ -818,13 +837,13 @@ document.getElementById('order-add-item').addEventListener('click', () => {
     renderOrderItemEditors();
 });
 document.getElementById('order-confirm-button').addEventListener('click', () => {
-    if (activeOrder) updateOrderStatus(activeOrder.id, 'confirmed');
+    if (activeOrder) updateOrderStatus(activeOrder.id, 'confirmed', document.getElementById('order-confirm-button'));
 });
 document.getElementById('order-deliver-button').addEventListener('click', () => {
-    if (activeOrder) updateOrderStatus(activeOrder.id, 'delivered');
+    if (activeOrder) updateOrderStatus(activeOrder.id, 'delivered', document.getElementById('order-deliver-button'));
 });
 document.getElementById('order-cancel-button').addEventListener('click', () => {
-    if (activeOrder) updateOrderStatus(activeOrder.id, 'cancelled');
+    if (activeOrder) updateOrderStatus(activeOrder.id, 'cancelled', document.getElementById('order-cancel-button'));
 });
 document.querySelectorAll('.admin-tab').forEach(button => button.addEventListener('click', switchPanel));
 restoreSession();

@@ -41,17 +41,30 @@
         .hide-scroll::-webkit-scrollbar { display: none; }
         .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
         button, a { -webkit-tap-highlight-color: transparent; }
-        .nav-link { display: inline-flex; min-height: 40px; align-items: center; }
+        .nav-link { display: inline-flex; min-height: 32px; align-items: center; }
         .nav-link.text-brand-blue { color: #e5091b; border-color: #e5091b; }
         .brand-wordmark { display: inline-flex; align-items: center; gap: .45rem; white-space: nowrap; }
         .brand-wordmark img { height: 2.65rem; width: 4rem; object-fit: contain; }
-        .brand-wordmark-copy { display: flex; flex-direction: column; align-items: flex-start; line-height: .95; }
-        .brand-wordmark-tech { color: #fff; font-size: 1rem; font-weight: 900; letter-spacing: .08em; }
-        .brand-wordmark-maroc { margin-top: .25rem; color: #d1d2d6; font-size: .58rem; font-weight: 700; letter-spacing: .32em; }
+        .brand-wordmark-copy { display: inline-block; white-space: nowrap; color: #f3f4f6; font-family: 'Arial Black', Inter, sans-serif; font-size: .94rem; font-style: italic; font-weight: 900; letter-spacing: -.045em; line-height: 1; }
         .category-banner-image { transform: scale(1); transition: transform .3s ease; }
         .category-banner:hover .category-banner-image { transform: scale(1.06); }
         .hero-banner { background: radial-gradient(ellipse at 85% 15%, #252529 0%, #101012 54%, #080809 100%); }
         .drawer-backdrop[aria-hidden="true"] { display: none; }
+        @keyframes order-sent {
+            0% { opacity: 0; transform: translateY(8px) scale(.75); }
+            70% { opacity: 1; transform: translateY(-2px) scale(1.08); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes paper-plane-send {
+            from { transform: translateX(-2px) rotate(-8deg); }
+            to { transform: translateX(3px) rotate(8deg); }
+        }
+        .checkout-success-icon { animation: order-sent .45s ease-out both; }
+        .order-sending-icon { animation: paper-plane-send .55s ease-in-out infinite alternate; }
+        @media (prefers-reduced-motion: reduce) {
+            .checkout-success-icon, .order-sending-icon { animation: none; }
+            .category-banner-image { transition: none; }
+        }
     </style>
 </head>
 <body class="text-gray-800">
@@ -72,7 +85,7 @@
             <a href="#" onclick="switchTab('accueil')" class="absolute left-1/2 flex -translate-x-1/2 items-center justify-center lg:static lg:translate-x-0 lg:flex-none lg:justify-start" aria-label="AZ TECH Maroc, accueil">
                 <span class="brand-wordmark" aria-hidden="true">
                     <img src="/assets/az-symbol.png" alt="" fetchpriority="high">
-                    <span class="brand-wordmark-copy"><span class="brand-wordmark-tech">TECH</span><span class="brand-wordmark-maroc">MAROC</span></span>
+                    <span class="brand-wordmark-copy">TECH MAROC</span>
                 </span>
             </a>
 
@@ -364,7 +377,7 @@
                 <div class="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:justify-end">
                     <button type="button" onclick="closeCheckout()" class="rounded-md border border-gray-300 px-5 py-2.5 font-medium text-gray-700 hover:bg-gray-50" data-i18n="cancel">إلغاء</button>
                     <button id="submit-order-button" type="submit" class="rounded-md bg-brand-orange px-5 py-2.5 font-bold text-white hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-60">
-                        <span data-i18n="sendOrder">إرسال الطلب</span>
+                        <i class="fa-solid fa-paper-plane mr-2" aria-hidden="true"></i><span data-i18n="sendOrder">إرسال الطلب</span>
                     </button>
                 </div>
             </form>
@@ -401,7 +414,7 @@
                     <div class="mb-3 flex items-center gap-2" role="img" aria-label="AZ TECH Maroc">
                         <span class="brand-wordmark">
                             <img src="/assets/az-symbol.png" alt="" loading="lazy">
-                            <span class="brand-wordmark-copy"><span class="brand-wordmark-tech">TECH</span><span class="brand-wordmark-maroc">MAROC</span></span>
+                            <span class="brand-wordmark-copy">TECH MAROC</span>
                         </span>
                     </div>
                     <p class="max-w-sm text-sm leading-6 text-white/75" data-i18n="footerAbout">متجركم للإلكترونيات في المغرب. تصفحوا المنتجات وأرسلوا طلباتكم مباشرة.</p>
@@ -526,10 +539,9 @@
                 },
                 messages: {
                     whatsappOpened: 'فتح واتساب برسالة الطلب. اضغط على إرسال لإتمام الطلب.',
-                    sent: 'شكراً لك! تم إرسال طلبك. سنتواصل معك لتأكيده.',
+                    sent: 'تم إرسال الطلب',
                     failed: 'تعذر إرسال الطلب. تحقق من اتصالك بالإنترنت ثم حاول مجدداً.',
                     sheetsAccess: 'تعذر الوصول إلى Google Sheets. يجب ضبط تطبيق Apps Script للسماح بالوصول لأي شخص، وتشغيله بصلاحيات مالك الجدول.',
-                    sentSheetsWarning: 'توصلنا بطلبك، لكن تعذر تحديث Google Sheets. الطلب محفوظ في لوحة الإدارة.',
                     whatsappGreeting: 'مرحباً AZ TECH، أريد طلب:',
                     product: 'المنتج', quantity: 'الكمية', total: 'المجموع',
                     name: 'الاسم', phone: 'الهاتف', address: 'العنوان'
@@ -586,10 +598,9 @@
                 genericDescription: 'Article {brand} disponible à la commande chez AZ TECH.',
                 fallbackDescription: {}, messages: {
                     whatsappOpened: 'WhatsApp s’est ouvert avec votre commande. Appuyez sur Envoyer pour nous la transmettre.',
-                    sent: 'Merci ! Votre commande a été transmise. Nous vous contacterons pour la confirmer.',
+                    sent: 'Commande envoyée',
                     failed: 'Envoi impossible. Vérifiez votre connexion puis réessayez.',
                     sheetsAccess: 'Accès à Google Sheets refusé. Dans Apps Script, autorisez l’accès à tous et exécutez l’application avec les droits du propriétaire du tableur.',
-                    sentSheetsWarning: 'Commande reçue, mais Google Sheets n’a pas pu être mis à jour. La commande est enregistrée dans l’administration.',
                     whatsappGreeting: 'Bonjour AZ TECH, je souhaite commander :',
                     product: 'Produit', quantity: 'Quantité', total: 'Total',
                     name: 'Nom', phone: 'Téléphone', address: 'Adresse'
@@ -928,6 +939,18 @@
             element.textContent = message;
         }
 
+        function showCheckoutSuccess(message) {
+            const element = document.getElementById('checkout-message');
+            element.className = 'flex items-center justify-center gap-3 rounded-lg bg-green-50 px-4 py-4 text-base font-bold text-green-800';
+            element.replaceChildren();
+            const icon = document.createElement('span');
+            icon.className = 'checkout-success-icon flex h-10 w-10 items-center justify-center rounded-full bg-green-600 text-white';
+            icon.innerHTML = '<i class="fa-solid fa-paper-plane" aria-hidden="true"></i>';
+            const label = document.createElement('span');
+            label.textContent = message;
+            element.append(icon, label);
+        }
+
         document.getElementById('checkout-modal').addEventListener('click', event => {
             if (event.target.id === 'checkout-modal') closeCheckout();
         });
@@ -966,6 +989,7 @@
 
             const submitButton = document.getElementById('submit-order-button');
             submitButton.disabled = true;
+            submitButton.querySelector('.fa-paper-plane').classList.add('order-sending-icon');
             submitButton.querySelector('[data-i18n="sendOrder"]').textContent = t('sending');
             try {
                 const response = await fetch('/api/orders', {
@@ -982,7 +1006,7 @@
                     return;
                 }
                 form.reset();
-                showCheckoutMessage(result.sheetsSynced ? t('messages').sent : t('messages').sentSheetsWarning, !result.sheetsSynced);
+                showCheckoutSuccess(t('messages').sent);
                 submitButton.classList.add('hidden');
                 if (checkoutFromCart) {
                     cart.clear();
@@ -995,6 +1019,7 @@
                 showCheckoutMessage(t('messages').failed, true);
             } finally {
                 submitButton.disabled = false;
+                submitButton.querySelector('.fa-paper-plane').classList.remove('order-sending-icon');
                 if (!submitButton.classList.contains('hidden')) {
                     submitButton.querySelector('[data-i18n="sendOrder"]').textContent = t('sendOrder');
                 }

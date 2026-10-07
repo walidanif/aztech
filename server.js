@@ -442,6 +442,7 @@ async function syncOrderWithSheets(operation, order) {
         const response = await fetch(GOOGLE_SHEETS_WEB_APP_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            signal: AbortSignal.timeout(6000),
             body: JSON.stringify({
                 operation,
                 orderId: order.id,
