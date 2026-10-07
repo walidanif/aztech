@@ -33,6 +33,43 @@ function supabaseConfig() {
     return { url: url.replace(/\/+$/, ''), key };
 }
 
+function supabaseHealth() {
+    if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+        return {
+            ready: false,
+            code: 'SUPABASE_CONFIG_MISSING',
+            message: 'Vercel is missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY. Add both in Project Settings → Environment Variables, then redeploy.'
+        };
+    }
+    return null;
+}
+
+function publicServerError(error) {
+    const message = String(error.message || '');
+    if (/Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY/.test(message)) {
+        return {
+            code: 'SUPABASE_CONFIG_MISSING',
+            message: 'Vercel is missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY. Add both in Project Settings → Environment Variables, then redeploy.'
+        };
+    }
+    if (/Supabase request failed \((401|403)\)/.test(message)) {
+        return {
+            code: 'SUPABASE_KEY_INVALID',
+            message: 'Vercel cannot authenticate with Supabase. Check that SUPABASE_URL and the Supabase service-role key belong to the same project.'
+        };
+    }
+    if (/Supabase request failed \((404)\)|relation .*az_(store|sessions).* does not exist|Could not find the table .*az_(store|sessions)/i.test(message)) {
+        return {
+            code: 'SUPABASE_SCHEMA_MISSING',
+            message: 'The Supabase tables are missing. Run supabase/vercel-setup.sql in the Supabase SQL Editor, then redeploy Vercel.'
+        };
+    }
+    return {
+        code: 'SERVER_STORAGE_ERROR',
+        message: 'The admin storage service is unavailable. Check the Vercel Function logs for the Supabase error.'
+    };
+}
+
 async function supabaseRequest(resource, options = {}) {
     const { url, key } = supabaseConfig();
     const response = await fetch(`${url}/rest/v1/${resource}`, {
@@ -464,6 +501,20 @@ function parseUserId(value) {
 async function handleApi(req, res, url) {
     if (req.method === 'GET' && url.pathname === '/api/platform') {
         return sendJson(res, 200, { serverless: IS_VERCEL });
+    }
+
+    if (req.method === 'GET' && url.pathname === '/api/health') {
+        if (!IS_VERCEL) return sendJson(res, 200, { ready: true, code: 'LOCAL' });
+        const configError = supabaseHealth();
+        if (configError) return sendJson(res, 503, configError);
+        try {
+            await supabaseRequest('az_store?select=id&limit=1');
+            await supabaseRequest('az_sessions?select=token_hash&limit=1');
+            return sendJson(res, 200, { ready: true, code: 'READY' });
+        } catch (error) {
+            console.error('Supabase health check failed:', error);
+            return sendJson(res, 503, { ready: false, ...publicServerError(error) });
+        }
     }
 
     if (req.method === 'GET' && url.pathname === '/api/catalog-events') {
@@ -914,7 +965,7 @@ async function handleRequest(req, res) {
     try {
         const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
         if (url.pathname.startsWith('/api/')) {
-            if (IS_VERCEL && !['/api/platform', '/api/catalog-events'].includes(url.pathname)) {
+            if (IS_VERCEL && !['/api/platform', '/api/health', '/api/catalog-events'].includes(url.pathname)) {
                 await initializeStore();
             }
             await handleApi(req, res, url);
@@ -925,8 +976,10 @@ async function handleRequest(req, res) {
         const status = error.status || (error.code === 'ENOENT' ? 404 : 500);
         if (status >= 500) console.error(error);
         if (res.headersSent) return res.destroy();
+        const details = status >= 500 ? publicServerError(error) : null;
         sendJson(res, status, {
-            error: status === 500 ? 'An internal server error occurred.' : error.message
+            ...(details ? { errorCode: details.code } : {}),
+            error: details ? details.message : error.message
         });
     }
 }

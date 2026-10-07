@@ -748,6 +748,24 @@ async function restoreSession() {
     }
 }
 
+async function checkAdminServiceHealth() {
+    const message = document.getElementById('admin-service-health');
+    try {
+        const response = await fetch('/api/health', { cache: 'no-store' });
+        const result = await response.json();
+        if (result.ready) {
+            message.classList.add('hidden');
+            return;
+        }
+        message.textContent = result.message || 'Le stockage de l’administration est indisponible.';
+        message.className = 'mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-800';
+    } catch (error) {
+        console.error('Could not check admin service health:', error);
+        message.textContent = 'Impossible de vérifier le stockage. Consultez les logs Vercel.';
+        message.className = 'mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-800';
+    }
+}
+
 document.getElementById('login-form').addEventListener('submit', login);
 document.getElementById('logout-button').addEventListener('click', () => logout().catch(error => console.error('Logout failed:', error)));
 document.getElementById('account-button').addEventListener('click', () => showAccountView(false));
@@ -801,3 +819,4 @@ document.getElementById('order-cancel-button').addEventListener('click', () => {
 });
 document.querySelectorAll('.admin-tab').forEach(button => button.addEventListener('click', switchPanel));
 restoreSession();
+checkAdminServiceHealth();
