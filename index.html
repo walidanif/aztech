@@ -3,7 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AZ TECH Maroc | Technologie pour tous</title>
+    <title>AZ TECH Maroc | Aztechma.ma</title>
+    <meta name="description" content="AZ TECH Maroc : smartphones, ordinateurs, téléviseurs et accessoires. Commandez en ligne sur Aztechma.ma, livraison partout au Maroc.">
+    <link rel="canonical" href="https://www.aztechma.ma/">
+    <meta name="theme-color" content="#101012">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="AZ TECH Maroc">
+    <meta property="og:title" content="AZ TECH Maroc | Aztechma.ma">
+    <meta property="og:description" content="Smartphones, ordinateurs, téléviseurs et accessoires. Commandez en ligne avec livraison partout au Maroc.">
+    <meta property="og:url" content="https://www.aztechma.ma/">
+    <meta property="og:image" content="https://www.aztechma.ma/assets/az-tech-logo.png">
+    <meta name="twitter:card" content="summary_large_image">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -457,7 +467,6 @@
         ];
 
         // Paste the deployed Google Apps Script web app URL here to receive orders in Sheets.
-        const GOOGLE_SHEETS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbx96t2kRGWLWY-ZqLR_j_5jDIBzQ1bLZGQYMPu34H5GwzKSsG6XSyPTR9N1GzsOA4uh/exec';
         const WHATSAPP_NUMBER = '212652517115';
         let selectedProduct = null;
         let selectedReviewRating = 0;
@@ -524,11 +533,12 @@
                     whatsappOpened: 'فتح واتساب برسالة الطلب. اضغط على إرسال لإتمام الطلب.',
                     sent: 'شكراً لك! تم إرسال طلبك. سنتواصل معك لتأكيده.',
                     failed: 'تعذر إرسال الطلب. تحقق من اتصالك بالإنترنت ثم حاول مجدداً.',
+                    sheetsAccess: 'تعذر الوصول إلى Google Sheets. يجب ضبط تطبيق Apps Script للسماح بالوصول لأي شخص، وتشغيله بصلاحيات مالك الجدول.',
                     whatsappGreeting: 'مرحباً AZ TECH، أريد طلب:',
                     product: 'المنتج', quantity: 'الكمية', total: 'المجموع',
                     name: 'الاسم', phone: 'الهاتف', address: 'العنوان'
                 },
-                title: 'AZ TECH - متجرك للإلكترونيات'
+                title: 'AZ TECH المغرب | Aztechma.ma'
             },
             fr: {
                 shipping: 'Livraison partout au Maroc', track: 'Suivi de commande', contact: 'Contact',
@@ -582,11 +592,12 @@
                     whatsappOpened: 'WhatsApp s’est ouvert avec votre commande. Appuyez sur Envoyer pour nous la transmettre.',
                     sent: 'Merci ! Votre commande a été transmise. Nous vous contacterons pour la confirmer.',
                     failed: 'Envoi impossible. Vérifiez votre connexion puis réessayez.',
+                    sheetsAccess: 'Accès à Google Sheets refusé. Dans Apps Script, autorisez l’accès à tous et exécutez l’application avec les droits du propriétaire du tableur.',
                     whatsappGreeting: 'Bonjour AZ TECH, je souhaite commander :',
                     product: 'Produit', quantity: 'Quantité', total: 'Total',
                     name: 'Nom', phone: 'Téléphone', address: 'Adresse'
                 },
-                title: 'AZ TECH - Votre magasin d’électronique'
+                title: 'AZ TECH Maroc | Aztechma.ma'
             }
         };
 
@@ -956,32 +967,23 @@
                 createdAt: new Date().toISOString()
             };
 
-            if (!GOOGLE_SHEETS_WEB_APP_URL.startsWith('https://script.google.com/macros/s/')) {
-                const messageLabels = t('messages');
-                const message = [
-                    messageLabels.whatsappGreeting,
-                    ...items.map(item => `${item.product} × ${item.quantity} — ${formatPrice(item.unitPrice * item.quantity)}`),
-                    messageLabels.total + ': ' + formatPrice(total),
-                    messageLabels.name + ': ' + order.firstName + ' ' + order.lastName,
-                    messageLabels.phone + ': ' + order.phone,
-                    messageLabels.address + ': ' + order.address
-                ].join('\n');
-                openWhatsApp(null, message);
-                showCheckoutMessage(messageLabels.whatsappOpened);
-                return;
-            }
-
             const submitButton = document.getElementById('submit-order-button');
             submitButton.disabled = true;
             submitButton.querySelector('[data-i18n="sendOrder"]').textContent = t('sending');
             try {
-                // Apps Script does not expose CORS headers; no-cors sends the simple POST to doPost.
-                await fetch(GOOGLE_SHEETS_WEB_APP_URL, {
+                const response = await fetch('/api/orders', {
                     method: 'POST',
-                    mode: 'no-cors',
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(order)
                 });
+                const result = await response.json();
+                if (!response.ok) {
+                    const message = result.errorCode === 'SHEETS_ACCESS_DENIED'
+                        ? t('messages').sheetsAccess
+                        : t('messages').failed;
+                    showCheckoutMessage(message, true);
+                    return;
+                }
                 form.reset();
                 showCheckoutMessage(t('messages').sent);
                 submitButton.classList.add('hidden');
@@ -992,6 +994,7 @@
                 checkoutItems = [];
                 checkoutFromCart = false;
             } catch (error) {
+                console.error('Could not submit the order:', error);
                 showCheckoutMessage(t('messages').failed, true);
             } finally {
                 submitButton.disabled = false;

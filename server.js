@@ -9,6 +9,7 @@ const { promisify } = require('node:util');
 const scrypt = promisify(crypto.scrypt);
 const ROOT = __dirname;
 const IS_VERCEL = Boolean(process.env.VERCEL);
+const GOOGLE_SHEETS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbx96t2kRGWLWY-ZqLR_j_5jDIBzQ1bLZGQYMPu34H5GwzKSsG6XSyPTR9N1GzsOA4uh/exec';
 const DATA_DIR = path.resolve(process.env.AZ_DATA_DIR || path.join(ROOT, 'data'));
 const STORE_FILE = path.join(DATA_DIR, 'store.json');
 const SEED_FILE = path.join(ROOT, 'data', 'products.json');
@@ -434,6 +435,32 @@ async function handleApi(req, res, url) {
         return;
     }
 
+    if (req.method === 'POST' && url.pathname === '/api/orders') {
+        requireSameOrigin(req);
+        const order = await readJson(req);
+        const response = await fetch(GOOGLE_SHEETS_WEB_APP_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify(order),
+            redirect: 'follow'
+        });
+        const result = (await response.text()).trim();
+        if (new URL(response.url).hostname === 'accounts.google.com') {
+            return sendJson(res, 502, {
+                errorCode: 'SHEETS_ACCESS_DENIED',
+                error: 'The Google Sheets web app must allow access to anyone and execute as the spreadsheet owner.'
+            });
+        }
+        if (!response.ok || result !== 'OK') {
+            return sendJson(res, 502, {
+                error: result.startsWith('ERROR: ')
+                    ? result.slice(7, 407)
+                    : 'Google Sheets did not confirm receipt of the order.'
+            });
+        }
+        return sendJson(res, 200, { ok: true });
+    }
+
     if (req.method === 'GET' && url.pathname === '/api/products') {
         return sendJson(res, 200, store.products);
     }
@@ -701,7 +728,7 @@ async function handleRequest(req, res) {
     try {
         const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
         if (url.pathname.startsWith('/api/')) {
-            if (IS_VERCEL && url.pathname !== '/api/platform' && url.pathname !== '/api/catalog-events') {
+            if (IS_VERCEL && !['/api/platform', '/api/catalog-events', '/api/orders'].includes(url.pathname)) {
                 await initializeStore();
             }
             await handleApi(req, res, url);

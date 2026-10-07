@@ -2,7 +2,7 @@
  * Google Apps Script endpoint for AZ TECH order forms.
  * Paste this file into the Apps Script project attached to your orders spreadsheet.
  * Deploy it as a Web App (execute as you; access: anyone), then paste the /exec URL
- * into GOOGLE_SHEETS_WEB_APP_URL in index.html.
+ * into GOOGLE_SHEETS_WEB_APP_URL in server.js.
  */
 
 const ORDERS_SHEET_NAME = 'Commandes';
@@ -10,7 +10,7 @@ const ORDERS_SPREADSHEET_ID = '1-8IlfZO8Pd17atBKQ7jG5N9AxS17kTTEf1_MCwlUrcU';
 const ORDER_HEADERS = [
   'Référence', 'Date de réception', 'Prénom', 'Nom', 'Téléphone',
   'Adresse de livraison', 'ID produit', 'Produit', 'Quantité',
-  'Prix unitaire (DH)', 'Total (DH)', 'Devise'
+  'Prix unitaire (DH)', 'Total (DH)', 'Devise', 'Nom complet'
 ];
 
 // Keep these IDs and prices in sync with the products array in the HTML file.
@@ -78,10 +78,13 @@ function doPost(e) {
     if (sheet.getLastRow() === 0) {
       sheet.appendRow(ORDER_HEADERS);
       sheet.setFrozenRows(1);
+    } else if (!sheet.getRange(1, ORDER_HEADERS.length).getValue()) {
+      sheet.getRange(1, ORDER_HEADERS.length).setValue('Nom complet');
     }
 
     const reference = Utilities.getUuid();
     const receivedAt = new Date();
+    const fullName = [firstName, lastName].filter(Boolean).join(' ');
     const rows = orderItems.map(({ productId, quantity, product }) => [
       reference,
       receivedAt,
@@ -94,7 +97,8 @@ function doPost(e) {
       quantity,
       product.price,
       product.price * quantity,
-      'MAD'
+      'MAD',
+      safeCell(fullName)
     ]);
     sheet.getRange(sheet.getLastRow() + 1, 1, rows.length, ORDER_HEADERS.length).setValues(rows);
 
