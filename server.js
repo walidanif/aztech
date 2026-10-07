@@ -143,10 +143,11 @@ async function initializeStore() {
             if (!Array.isArray(store.products) || !Array.isArray(store.users) || !Array.isArray(store.audit)) {
                 throw new Error('The Supabase az_store row has an invalid format.');
             }
+            if (!Array.isArray(store.orders)) store.orders = [];
             if (store.users.length === 0) await bootstrapAdmin();
             return;
         }
-        store = { products: JSON.parse(await fs.readFile(SEED_FILE, 'utf8')), users: [], audit: [] };
+        store = { products: JSON.parse(await fs.readFile(SEED_FILE, 'utf8')), users: [], audit: [], orders: [] };
         await bootstrapAdmin();
         return;
     }
@@ -158,13 +159,14 @@ async function initializeStore() {
             throw new Error('The existing data/store.json file has an invalid format.');
         }
         if (store.users.length === 0) await bootstrapAdmin();
+        if (!Array.isArray(store.orders)) store.orders = [];
         return;
     } catch (error) {
         if (error.code !== 'ENOENT') throw error;
     }
 
     const products = JSON.parse(await fs.readFile(SEED_FILE, 'utf8'));
-    store = { products, users: [], audit: [] };
+    store = { products, users: [], audit: [], orders: [] };
     await bootstrapAdmin();
 }
 
@@ -389,9 +391,59 @@ function requirePermission(user, permission) {
     if (!hasPermission(user, permission)) throw httpError(403, 'Your account does not have permission for this action.');
 }
 
-function audit(actor, action, subject) {
-    store.audit.push({ at: new Date().toISOString(), actor: actor.username, action, subject });
+function audit(actor, action, subject, details = '') {
+    store.audit.push({ at: new Date().toISOString(), actor: actor.username, action, subject, details });
     if (store.audit.length > 500) store.audit.splice(0, store.audit.length - 500);
+}
+
+function formatOrderSummary(order) {
+    return order.items.map(item => `${item.title} × ${item.quantity} (${item.lineTotal} DH)`).join(', ');
+}
+
+async function syncOrderWithSheets(operation, order) {
+    try {
+        const response = await fetch(GOOGLE_SHEETS_WEB_APP_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({
+                operation,
+                orderId: order.id,
+                status: order.status,
+                customer: order.customer,
+                items: order.items.map(({ productId, title, quantity, unitPrice }) => ({
+                    productId,
+                    product: title,
+                    quantity,
+                    unitPrice
+                })),
+                confirmedBy: order.confirmedBy,
+                deliveredBy: order.deliveredBy,
+                cancelledBy: order.cancelledBy,
+                updatedAt: order.updatedAt
+            }),
+            redirect: 'follow'
+        });
+        const result = (await response.text()).trim();
+        if (new URL(response.url).hostname === 'accounts.google.com') return 'Google Sheets access is not public.';
+        if (!response.ok || result !== 'OK') {
+            return result.startsWith('ERROR: ') ? result.slice(7, 407) : 'Google Sheets did not confirm the update.';
+        }
+        return '';
+    } catch (error) {
+        return error.message;
+    }
+}
+
+async function persistOrderSheetsStatus(order, operation, actor) {
+    order.updatedAt = new Date().toISOString();
+    const error = await syncOrderWithSheets(operation, order);
+    order.sheetsSynced = !error;
+    if (error) {
+        audit(actor, 'order.sheets_sync_failed', order.id, error);
+        console.error(`Order ${order.id} was saved in the admin panel but did not sync to Sheets: ${error}`);
+    }
+    await writeStore();
+    return !error;
 }
 
 async function revokeUserSessions(userId) {
@@ -437,28 +489,62 @@ async function handleApi(req, res, url) {
 
     if (req.method === 'POST' && url.pathname === '/api/orders') {
         requireSameOrigin(req);
-        const order = await readJson(req);
-        const response = await fetch(GOOGLE_SHEETS_WEB_APP_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify(order),
-            redirect: 'follow'
+        const data = await readJson(req);
+        if (!data || typeof data !== 'object' || Array.isArray(data)) {
+            throw httpError(400, 'Invalid order details.');
+        }
+        const firstName = String(data.firstName || '').trim().slice(0, 80);
+        const lastName = String(data.lastName || '').trim().slice(0, 80);
+        const phone = String(data.phone || '').trim().slice(0, 24);
+        const address = String(data.address || '').trim().slice(0, 500);
+        if (!firstName || !lastName || !address || !/^\+?[0-9 ()\-]{8,24}$/.test(phone)) {
+            throw httpError(400, 'Enter a valid name, phone number, and delivery address.');
+        }
+        if (!Array.isArray(data.items) || data.items.length < 1 || data.items.length > 50) {
+            throw httpError(400, 'The order must contain between 1 and 50 products.');
+        }
+        const items = data.items.map(item => {
+            if (!item || typeof item !== 'object' || Array.isArray(item)) {
+                throw httpError(400, 'Invalid product in order.');
+            }
+            const productId = Number(item.productId);
+            const quantity = Number(item.quantity);
+            const product = store.products.find(candidate => candidate.id === productId);
+            if (!product || !Number.isInteger(quantity) || quantity < 1 || quantity > 20) {
+                throw httpError(400, 'Unknown product or invalid quantity.');
+            }
+            return {
+                productId,
+                title: product.title,
+                quantity,
+                unitPrice: product.price,
+                lineTotal: product.price * quantity
+            };
         });
-        const result = (await response.text()).trim();
-        if (new URL(response.url).hostname === 'accounts.google.com') {
-            return sendJson(res, 502, {
-                errorCode: 'SHEETS_ACCESS_DENIED',
-                error: 'The Google Sheets web app must allow access to anyone and execute as the spreadsheet owner.'
-            });
-        }
-        if (!response.ok || result !== 'OK') {
-            return sendJson(res, 502, {
-                error: result.startsWith('ERROR: ')
-                    ? result.slice(7, 407)
-                    : 'Google Sheets did not confirm receipt of the order.'
-            });
-        }
-        return sendJson(res, 200, { ok: true });
+        const now = new Date().toISOString();
+        const order = {
+            id: crypto.randomUUID(),
+            createdAt: now,
+            updatedAt: now,
+            customer: { firstName, lastName, phone, address },
+            items,
+            total: items.reduce((sum, item) => sum + item.lineTotal, 0),
+            status: 'pending',
+            notificationRead: false,
+            sheetsSynced: false,
+            confirmedBy: null,
+            confirmedAt: null,
+            deliveredBy: null,
+            deliveredAt: null,
+            cancelledBy: null,
+            cancelledAt: null
+        };
+        store.orders.unshift(order);
+        audit({ username: 'Client' }, 'order.created', order.id, `${firstName} ${lastName} — ${items.map(item => `${item.title} × ${item.quantity}`).join(', ')}`);
+        await writeStore();
+
+        const sheetsSynced = await persistOrderSheetsStatus(order, 'create', { username: 'System' });
+        return sendJson(res, 201, { ok: true, order, sheetsSynced });
     }
 
     if (req.method === 'GET' && url.pathname === '/api/products') {
@@ -536,7 +622,107 @@ async function handleApi(req, res, url) {
         if (req.method === 'GET' && url.pathname === '/api/admin/audit') {
             if (user.forcePasswordChange) throw httpError(403, 'Change the temporary password before using the administration panel.');
             requireAdmin(user);
-            return sendJson(res, 200, store.audit.slice(-100).reverse());
+            return sendJson(res, 200, store.audit.slice(-500).reverse());
+        }
+        if (req.method === 'GET' && url.pathname === '/api/admin/orders') {
+            if (user.forcePasswordChange) throw httpError(403, 'Change the temporary password before using the administration panel.');
+            requireAdmin(user);
+            const unreadCount = store.orders.filter(order => !order.notificationRead).length;
+            return sendJson(res, 200, {
+                orders: [...store.orders].sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt)),
+                unreadCount
+            });
+        }
+        if (req.method === 'POST' && url.pathname === '/api/admin/orders/notifications/read') {
+            if (user.forcePasswordChange) throw httpError(403, 'Change the temporary password before using the administration panel.');
+            requireAdmin(user);
+            for (const order of store.orders) {
+                if (!order.notificationRead) order.notificationRead = true;
+            }
+            await writeStore();
+            return sendJson(res, 200, { ok: true });
+        }
+        const orderStatusMatch = url.pathname.match(/^\/api\/admin\/orders\/([0-9a-f-]{36})\/status$/i);
+        if (req.method === 'POST' && orderStatusMatch) {
+            if (user.forcePasswordChange) throw httpError(403, 'Change the temporary password before using the administration panel.');
+            requireAdmin(user);
+            const order = store.orders.find(item => item.id === orderStatusMatch[1]);
+            if (!order) throw httpError(404, 'Order not found.');
+            const statusData = await readJson(req);
+            const status = statusData && statusData.status;
+            const now = new Date().toISOString();
+            if (status === 'confirmed' && order.status === 'pending') {
+                order.status = 'confirmed';
+                order.confirmedBy = user.username;
+                order.confirmedAt = now;
+            } else if (status === 'delivered' && order.status === 'confirmed') {
+                order.status = 'delivered';
+                order.deliveredBy = user.username;
+                order.deliveredAt = now;
+            } else if (status === 'cancelled' && ['pending', 'confirmed'].includes(order.status)) {
+                order.status = 'cancelled';
+                order.cancelledBy = user.username;
+                order.cancelledAt = now;
+            } else {
+                throw httpError(409, 'This order cannot be moved to the selected status.');
+            }
+            order.updatedAt = now;
+            order.sheetsSynced = false;
+            audit(user, `order.${status}`, order.id, `${order.customer.firstName} ${order.customer.lastName}; ${formatOrderSummary(order)}`);
+            await writeStore();
+            const sheetsSynced = await persistOrderSheetsStatus(order, 'status', user);
+            return sendJson(res, 200, { order, sheetsSynced });
+        }
+        const orderMatch = url.pathname.match(/^\/api\/admin\/orders\/([0-9a-f-]{36})$/i);
+        if (req.method === 'PUT' && orderMatch) {
+            if (user.forcePasswordChange) throw httpError(403, 'Change the temporary password before using the administration panel.');
+            requireAdmin(user);
+            const order = store.orders.find(item => item.id === orderMatch[1]);
+            if (!order) throw httpError(404, 'Order not found.');
+            if (!['pending', 'confirmed'].includes(order.status)) {
+                throw httpError(409, 'Delivered or cancelled orders cannot be edited.');
+            }
+            const data = await readJson(req);
+            if (!data || typeof data !== 'object' || Array.isArray(data)) {
+                throw httpError(400, 'Invalid order details.');
+            }
+            const firstName = String(data.firstName || '').trim().slice(0, 80);
+            const lastName = String(data.lastName || '').trim().slice(0, 80);
+            const phone = String(data.phone || '').trim().slice(0, 24);
+            const address = String(data.address || '').trim().slice(0, 500);
+            if (!firstName || !lastName || !address || !/^\+?[0-9 ()\-]{8,24}$/.test(phone)) {
+                throw httpError(400, 'Enter a valid name, phone number, and delivery address.');
+            }
+            if (!Array.isArray(data.items) || data.items.length < 1 || data.items.length > 50) {
+                throw httpError(400, 'The order must contain between 1 and 50 products.');
+            }
+            const previousSummary = formatOrderSummary(order);
+            const items = data.items.map(item => {
+                if (!item || typeof item !== 'object' || Array.isArray(item)) {
+                    throw httpError(400, 'Invalid product in order.');
+                }
+                const productId = Number(item.productId);
+                const quantity = Number(item.quantity);
+                const product = store.products.find(candidate => candidate.id === productId);
+                const previousItem = order.items.find(candidate => candidate.productId === productId);
+                if (!Number.isInteger(quantity) || quantity < 1 || quantity > 20 || (!product && !previousItem)) {
+                    throw httpError(400, 'Choose a valid product and quantity.');
+                }
+                const title = product ? product.title : previousItem.title;
+                const unitPrice = product ? product.price : previousItem.unitPrice;
+                return { productId, title, quantity, unitPrice, lineTotal: unitPrice * quantity };
+            });
+            Object.assign(order, {
+                customer: { firstName, lastName, phone, address },
+                items,
+                total: items.reduce((sum, item) => sum + item.lineTotal, 0),
+                updatedAt: new Date().toISOString(),
+                sheetsSynced: false
+            });
+            audit(user, 'order.updated', order.id, `${firstName} ${lastName}; ancien: ${previousSummary}; nouveau: ${formatOrderSummary(order)}`);
+            await writeStore();
+            const sheetsSynced = await persistOrderSheetsStatus(order, 'update', user);
+            return sendJson(res, 200, { order, sheetsSynced });
         }
         if (req.method === 'GET' && url.pathname === '/api/admin/users') {
             if (user.forcePasswordChange) throw httpError(403, 'Change the temporary password before using the administration panel.');
@@ -728,7 +914,7 @@ async function handleRequest(req, res) {
     try {
         const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
         if (url.pathname.startsWith('/api/')) {
-            if (IS_VERCEL && !['/api/platform', '/api/catalog-events', '/api/orders'].includes(url.pathname)) {
+            if (IS_VERCEL && !['/api/platform', '/api/catalog-events'].includes(url.pathname)) {
                 await initializeStore();
             }
             await handleApi(req, res, url);

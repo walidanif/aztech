@@ -9,7 +9,9 @@ const ORDERS_SHEET_NAME = 'Commandes';
 const ORDERS_SPREADSHEET_ID = '1-8IlfZO8Pd17atBKQ7jG5N9AxS17kTTEf1_MCwlUrcU';
 const ORDER_HEADERS = [
   'Prénom', 'Nom', 'Numéro de téléphone', 'Adresse de livraison',
-  'Quantité', 'ARTICLE', 'Prix unitaire (DH)', 'Total (DH)'
+  'Quantité', 'ARTICLE', 'Prix unitaire (DH)', 'Total (DH)',
+  'Référence commande', 'Statut', 'Confirmée par', 'Livrée par',
+  'Annulée par', 'Dernière modification'
 ];
 
 // Keep these IDs and prices in sync with the products array in the HTML file.
@@ -51,10 +53,23 @@ function doPost(e) {
       throw new Error('Missing order data.');
     }
     const data = JSON.parse(e.postData.contents);
+    lock.waitLock(10000);
+    const sheet = getOrdersSheet();
+
+    if (data.operation === 'status') {
+      updateOrderStatus(sheet, data);
+      return ContentService.createTextOutput('OK');
+    }
+
     const firstName = cleanText(data.firstName || data.prenom || data.first_name, 80);
     const lastName = cleanText(data.lastName || data.nom || data.last_name, 80);
     const phone = cleanText(data.phone || data.telephone || data.mobile, 24);
     const address = cleanText(data.address || data.adresse, 500);
+    const customer = data.customer || {};
+    const customerFirstName = cleanText(customer.firstName, 80);
+    const customerLastName = cleanText(customer.lastName, 80);
+    const customerPhone = cleanText(customer.phone, 24);
+    const customerAddress = cleanText(customer.address, 500);
     const requestedItems = Array.isArray(data.items)
       ? data.items
       : [{
@@ -64,7 +79,11 @@ function doPost(e) {
           quantity: data.quantity
         }];
 
-    if (!firstName || !lastName || !address || !/^\+?[0-9 ()\-]{8,24}$/.test(phone)) {
+    const resolvedFirstName = customerFirstName || firstName;
+    const resolvedLastName = customerLastName || lastName;
+    const resolvedPhone = customerPhone || phone;
+    const resolvedAddress = customerAddress || address;
+    if (!resolvedFirstName || !resolvedLastName || !resolvedAddress || !/^\+?[0-9 ()\-]{8,24}$/.test(resolvedPhone)) {
       throw new Error('Missing or invalid customer details.');
     }
     if (requestedItems.length < 1 || requestedItems.length > 50) {
@@ -74,44 +93,36 @@ function doPost(e) {
       const productId = Number(item.productId);
       const quantity = Number(item.quantity);
       const product = ORDER_CATALOG[productId];
+      const suppliedPrice = item.unitPrice == null ? NaN : Number(item.unitPrice);
       if (!Number.isInteger(quantity) || quantity < 1 || quantity > 20) {
         throw new Error('Unknown product or invalid quantity.');
       }
       const title = cleanText(item.product || item.title || (product && product.title), 160);
-      const price = product ? product.price : Number(item.unitPrice);
+      const price = Number.isFinite(suppliedPrice) && suppliedPrice >= 0
+        ? suppliedPrice
+        : (product ? product.price : NaN);
       if (!title || !Number.isFinite(price) || price < 0) {
         throw new Error('Product name or price is missing.');
       }
       return { quantity, title, price };
     });
 
-    lock.waitLock(10000);
-    const spreadsheet = SpreadsheetApp.openById(ORDERS_SPREADSHEET_ID);
-    let sheet = spreadsheet.getSheetByName(ORDERS_SHEET_NAME);
-    if (!sheet) sheet = spreadsheet.insertSheet(ORDERS_SHEET_NAME);
-    if (sheet.getLastRow() === 0) {
-      sheet.appendRow(ORDER_HEADERS);
-      sheet.setFrozenRows(1);
-    } else {
-      if (!sheet.getRange(1, 7).getValue()) {
-        sheet.getRange(1, 7).setValue(ORDER_HEADERS[6]);
-      }
-      if (!sheet.getRange(1, 8).getValue()) {
-        sheet.getRange(1, 8).setValue(ORDER_HEADERS[7]);
-      }
+    if (data.operation === 'update') {
+      replaceOrderRows(sheet, data, {
+        firstName: resolvedFirstName,
+        lastName: resolvedLastName,
+        phone: resolvedPhone,
+        address: resolvedAddress
+      }, orderItems);
+      return ContentService.createTextOutput('OK');
     }
 
-    const rows = orderItems.map(({ quantity, title, price }) => [
-      safeCell(firstName),
-      safeCell(lastName),
-      safeCell(phone),
-      safeCell(address),
-      quantity,
-      safeCell(title),
-      price,
-      price * quantity
-    ]);
-    sheet.getRange(sheet.getLastRow() + 1, 1, rows.length, 8).setValues(rows);
+    appendOrderRows(sheet, data, {
+      firstName: resolvedFirstName,
+      lastName: resolvedLastName,
+      phone: resolvedPhone,
+      address: resolvedAddress
+    }, orderItems);
 
     return ContentService.createTextOutput('OK');
   } catch (error) {
@@ -119,6 +130,90 @@ function doPost(e) {
     return ContentService.createTextOutput('ERROR: ' + error.message);
   } finally {
     if (lock.hasLock()) lock.releaseLock();
+  }
+}
+
+function getOrdersSheet() {
+  const spreadsheet = SpreadsheetApp.openById(ORDERS_SPREADSHEET_ID);
+  let sheet = spreadsheet.getSheetByName(ORDERS_SHEET_NAME);
+  if (!sheet) sheet = spreadsheet.insertSheet(ORDERS_SHEET_NAME);
+  if (sheet.getLastRow() === 0) {
+    sheet.getRange(1, 1, 1, ORDER_HEADERS.length).setValues([ORDER_HEADERS]);
+    sheet.setFrozenRows(1);
+    return sheet;
+  }
+  for (let column = 1; column <= ORDER_HEADERS.length; column++) {
+    if (!sheet.getRange(1, column).getValue()) {
+      sheet.getRange(1, column).setValue(ORDER_HEADERS[column - 1]);
+    }
+  }
+  return sheet;
+}
+
+function makeOrderRow(data, customer, item) {
+  const now = new Date();
+  return [
+    safeCell(customer.firstName),
+    safeCell(customer.lastName),
+    safeCell(customer.phone),
+    safeCell(customer.address),
+    item.quantity,
+    safeCell(item.title),
+    item.price,
+    item.price * item.quantity,
+    safeCell(data.orderId),
+    safeCell(data.status || 'pending'),
+    safeCell(data.confirmedBy || ''),
+    safeCell(data.deliveredBy || ''),
+    safeCell(data.cancelledBy || ''),
+    data.updatedAt ? new Date(data.updatedAt) : now
+  ];
+}
+
+function appendOrderRows(sheet, data, customer, items) {
+  if (!data.orderId) throw new Error('Order reference is missing.');
+  const rows = items.map(item => makeOrderRow(data, customer, item));
+  sheet.getRange(sheet.getLastRow() + 1, 1, rows.length, ORDER_HEADERS.length).setValues(rows);
+}
+
+function findOrderRows(sheet, orderId) {
+  if (!orderId) throw new Error('Order reference is missing.');
+  const lastRow = sheet.getLastRow();
+  if (lastRow < 2) throw new Error('Order not found in the sheet.');
+  return sheet.getRange(2, 9, lastRow - 1, 1).getValues()
+    .map((row, index) => row[0] === orderId ? index + 2 : null)
+    .filter(row => row !== null);
+}
+
+function updateOrderStatus(sheet, data) {
+  const validStatuses = ['pending', 'confirmed', 'delivered', 'cancelled'];
+  if (validStatuses.indexOf(data.status) === -1) throw new Error('Invalid order status.');
+  const rows = findOrderRows(sheet, data.orderId);
+  const updatedAt = data.updatedAt ? new Date(data.updatedAt) : new Date();
+  rows.forEach(row => {
+    sheet.getRange(row, 10, 1, 5).setValues([[
+      data.status,
+      data.confirmedBy || '',
+      data.deliveredBy || '',
+      data.cancelledBy || '',
+      updatedAt
+    ]]);
+  });
+}
+
+function replaceOrderRows(sheet, data, customer, items) {
+  if (!Array.isArray(items) || items.length < 1) throw new Error('Order items are missing.');
+  const matchingRows = findOrderRows(sheet, data.orderId);
+  const rows = items.map(item => makeOrderRow(data, customer, item));
+  const commonCount = Math.min(matchingRows.length, rows.length);
+  for (let index = 0; index < commonCount; index++) {
+    sheet.getRange(matchingRows[index], 1, 1, ORDER_HEADERS.length).setValues([rows[index]]);
+  }
+  if (rows.length > matchingRows.length) {
+    const newRows = rows.slice(matchingRows.length);
+    sheet.getRange(sheet.getLastRow() + 1, 1, newRows.length, ORDER_HEADERS.length).setValues(newRows);
+  } else if (matchingRows.length > rows.length) {
+    matchingRows.slice(rows.length).sort((a, b) => b - a).forEach(row => sheet.deleteRow(row));
   }
 }
 

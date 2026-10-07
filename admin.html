@@ -113,10 +113,67 @@
             </div>
 
             <div class="flex gap-2 overflow-x-auto border-b border-gray-200">
+                <button id="orders-tab-button" type="button" class="admin-tab relative whitespace-nowrap border-b-2 border-transparent px-4 py-3 text-sm font-semibold text-gray-600" data-panel="orders-panel">
+                    Commandes <span id="orders-notification-badge" class="ml-1 hidden rounded-full bg-brand-orange px-2 py-0.5 text-[10px] font-bold text-white"></span>
+                </button>
                 <button type="button" class="admin-tab whitespace-nowrap border-b-2 border-transparent px-4 py-3 text-sm font-semibold text-gray-600" data-panel="products-panel" aria-current="page">Produits</button>
                 <button id="users-tab-button" type="button" class="admin-tab hidden whitespace-nowrap border-b-2 border-transparent px-4 py-3 text-sm font-semibold text-gray-600" data-panel="users-panel">Utilisateurs et permissions</button>
                 <button id="audit-tab-button" type="button" class="admin-tab hidden whitespace-nowrap border-b-2 border-transparent px-4 py-3 text-sm font-semibold text-gray-600" data-panel="audit-panel">Journal d’activité</button>
             </div>
+
+            <section id="orders-panel" class="hidden space-y-5" aria-label="Gestion des commandes">
+                <div id="orders-notification" class="hidden rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-900" role="status" aria-live="polite"></div>
+                <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+                    <article class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm"><p class="text-sm text-gray-500">Total des commandes</p><p id="orders-stat-total" class="mt-2 text-2xl font-extrabold text-brand-blue">0</p></article>
+                    <article class="rounded-xl border border-amber-200 bg-amber-50 p-4 shadow-sm"><p class="text-sm text-amber-800">En attente</p><p id="orders-stat-pending" class="mt-2 text-2xl font-extrabold text-amber-900">0</p></article>
+                    <article class="rounded-xl border border-blue-200 bg-blue-50 p-4 shadow-sm"><p class="text-sm text-blue-800">Confirmées</p><p id="orders-stat-confirmed" class="mt-2 text-2xl font-extrabold text-blue-900">0</p></article>
+                    <article class="rounded-xl border border-green-200 bg-green-50 p-4 shadow-sm"><p class="text-sm text-green-800">Livrées</p><p id="orders-stat-delivered" class="mt-2 text-2xl font-extrabold text-green-900">0</p></article>
+                    <article class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm"><p class="text-sm text-gray-500">Chiffre d’affaires livré</p><p id="orders-stat-revenue" class="mt-2 text-xl font-extrabold text-brand-orange">0 DH</p></article>
+                </div>
+                <div class="flex flex-wrap items-center gap-2 rounded-xl border border-gray-200 bg-white p-4 text-xs shadow-sm">
+                    <strong class="mr-1 text-gray-700">Commandes confirmées par admin :</strong>
+                    <div id="orders-confirmations-by-admin" class="flex flex-wrap gap-2"></div>
+                </div>
+                <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+                    <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+                        <label class="text-xs font-semibold text-gray-600">Rechercher une commande
+                            <input id="orders-search" type="search" placeholder="Nom, téléphone, article, adresse…" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm font-normal">
+                        </label>
+                        <label class="text-xs font-semibold text-gray-600">Statut
+                            <select id="orders-filter-status" class="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm font-normal">
+                                <option value="">Tous les statuts</option><option value="pending">En attente</option><option value="confirmed">Confirmée</option><option value="delivered">Livrée</option><option value="cancelled">Annulée</option>
+                            </select>
+                        </label>
+                        <label class="text-xs font-semibold text-gray-600">Du
+                            <input id="orders-filter-from" type="date" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm font-normal">
+                        </label>
+                        <label class="text-xs font-semibold text-gray-600">Au
+                            <input id="orders-filter-to" type="date" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm font-normal">
+                        </label>
+                        <label class="text-xs font-semibold text-gray-600">Confirmée par
+                            <select id="orders-filter-admin" class="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm font-normal">
+                                <option value="">Tous les admins</option>
+                            </select>
+                        </label>
+                    </div>
+                    <div class="mt-3 flex items-center justify-between gap-3">
+                        <p id="orders-count-label" class="text-xs text-gray-500"></p>
+                        <button id="orders-refresh-button" type="button" class="rounded-lg border border-gray-300 px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50"><i class="fa-solid fa-rotate-right mr-1" aria-hidden="true"></i> Actualiser</button>
+                    </div>
+                </div>
+                <div id="orders-message" class="hidden rounded-lg p-3 text-sm" role="status" aria-live="polite"></div>
+                <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-[1050px] w-full text-left text-sm">
+                            <thead class="bg-gray-50 text-xs uppercase tracking-wide text-gray-500">
+                                <tr><th class="px-4 py-3">Date / référence</th><th class="px-4 py-3">Client</th><th class="px-4 py-3">Articles</th><th class="px-4 py-3">Total</th><th class="px-4 py-3">Statut / confirmé par</th><th class="px-4 py-3 text-right">Actions</th></tr>
+                            </thead>
+                            <tbody id="orders-table-body" class="divide-y divide-gray-100"></tbody>
+                        </table>
+                    </div>
+                    <p id="orders-empty" class="hidden p-8 text-center text-sm text-gray-500">Aucune commande ne correspond aux filtres.</p>
+                </div>
+            </section>
 
             <section id="products-panel" class="space-y-5" aria-label="Gestion des produits">
                 <div id="products-access-denied" class="hidden rounded-xl border border-gray-200 bg-white p-8 text-center text-sm text-gray-600">Votre compte ne dispose d’aucune permission sur le catalogue.</div>
@@ -226,6 +283,33 @@
         </form>
     </dialog>
 
-    <script src="/admin.js?v=4" defer></script>
+    <dialog id="order-dialog" class="w-full max-w-3xl rounded-2xl border-0 p-0 shadow-2xl backdrop:bg-black/60">
+        <form id="order-form" class="space-y-5 p-5 sm:p-7">
+            <div class="flex items-start justify-between gap-4">
+                <div><p id="order-dialog-kicker" class="text-xs font-bold uppercase tracking-wide text-brand-orange">Commande</p><h2 id="order-dialog-title" class="mt-1 text-xl font-extrabold text-brand-blue">Détails de la commande</h2></div>
+                <button id="order-dialog-close" type="button" class="rounded-lg border border-gray-200 px-3 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-50">Fermer</button>
+            </div>
+            <div id="order-dialog-details" class="rounded-xl bg-gray-50 p-4 text-sm"></div>
+            <div id="order-edit-fields" class="hidden space-y-4">
+                <div class="grid gap-3 sm:grid-cols-2">
+                    <label class="text-sm font-semibold text-gray-700">Prénom<input name="firstName" required maxlength="80" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 font-normal"></label>
+                    <label class="text-sm font-semibold text-gray-700">Nom<input name="lastName" required maxlength="80" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 font-normal"></label>
+                    <label class="text-sm font-semibold text-gray-700">Téléphone<input name="phone" required maxlength="24" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 font-normal"></label>
+                    <label class="text-sm font-semibold text-gray-700">Adresse / localisation<input name="address" required maxlength="500" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 font-normal"></label>
+                </div>
+                <div><div class="mb-2 flex items-center justify-between"><h3 class="font-bold text-brand-blue">Articles commandés</h3><button id="order-add-item" type="button" class="rounded-lg border border-gray-300 px-3 py-2 text-xs font-semibold hover:bg-gray-50">+ Ajouter un article</button></div><div id="order-edit-items" class="space-y-2"></div></div>
+            </div>
+            <p id="order-dialog-message" class="hidden rounded-lg p-3 text-sm" role="alert"></p>
+            <div class="flex flex-wrap justify-end gap-2 border-t border-gray-100 pt-4">
+                <button id="order-confirm-button" type="button" class="hidden rounded-lg bg-blue-700 px-4 py-2.5 text-sm font-bold text-white hover:bg-blue-800">Confirmer</button>
+                <button id="order-deliver-button" type="button" class="hidden rounded-lg bg-green-700 px-4 py-2.5 text-sm font-bold text-white hover:bg-green-800">Marquer livrée</button>
+                <button id="order-cancel-button" type="button" class="hidden rounded-lg border border-red-200 px-4 py-2.5 text-sm font-bold text-red-700 hover:bg-red-50">Annuler la commande</button>
+                <button id="order-edit-button" type="button" class="hidden rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-bold text-gray-700 hover:bg-gray-50">Modifier</button>
+                <button id="order-save-button" type="submit" class="hidden rounded-lg bg-brand-orange px-4 py-2.5 text-sm font-bold text-white hover:brightness-95">Enregistrer les modifications</button>
+            </div>
+        </form>
+    </dialog>
+
+    <script src="/admin.js?v=5" defer></script>
 </body>
 </html>

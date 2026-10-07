@@ -534,6 +534,7 @@
                     sent: 'شكراً لك! تم إرسال طلبك. سنتواصل معك لتأكيده.',
                     failed: 'تعذر إرسال الطلب. تحقق من اتصالك بالإنترنت ثم حاول مجدداً.',
                     sheetsAccess: 'تعذر الوصول إلى Google Sheets. يجب ضبط تطبيق Apps Script للسماح بالوصول لأي شخص، وتشغيله بصلاحيات مالك الجدول.',
+                    sentSheetsWarning: 'توصلنا بطلبك، لكن تعذر تحديث Google Sheets. الطلب محفوظ في لوحة الإدارة.',
                     whatsappGreeting: 'مرحباً AZ TECH، أريد طلب:',
                     product: 'المنتج', quantity: 'الكمية', total: 'المجموع',
                     name: 'الاسم', phone: 'الهاتف', address: 'العنوان'
@@ -593,6 +594,7 @@
                     sent: 'Merci ! Votre commande a été transmise. Nous vous contacterons pour la confirmer.',
                     failed: 'Envoi impossible. Vérifiez votre connexion puis réessayez.',
                     sheetsAccess: 'Accès à Google Sheets refusé. Dans Apps Script, autorisez l’accès à tous et exécutez l’application avec les droits du propriétaire du tableur.',
+                    sentSheetsWarning: 'Commande reçue, mais Google Sheets n’a pas pu être mis à jour. La commande est enregistrée dans l’administration.',
                     whatsappGreeting: 'Bonjour AZ TECH, je souhaite commander :',
                     product: 'Produit', quantity: 'Quantité', total: 'Total',
                     name: 'Nom', phone: 'Téléphone', address: 'Adresse'
@@ -985,7 +987,7 @@
                     return;
                 }
                 form.reset();
-                showCheckoutMessage(t('messages').sent);
+                showCheckoutMessage(result.sheetsSynced ? t('messages').sent : t('messages').sentSheetsWarning, !result.sheetsSynced);
                 submitButton.classList.add('hidden');
                 if (checkoutFromCart) {
                     cart.clear();

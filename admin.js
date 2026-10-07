@@ -11,11 +11,31 @@ const PERMISSION_LABELS = {
     'products.view': 'Voir les produits',
     'products.manage': 'Gérer les produits'
 };
+const ACTIVITY_LABELS = {
+    'order.created': 'Nouvelle commande reçue',
+    'order.confirmed': 'Commande confirmée',
+    'order.delivered': 'Commande livrée',
+    'order.cancelled': 'Commande annulée',
+    'order.updated': 'Commande modifiée',
+    'order.sheets_sync_failed': 'Échec de synchronisation Google Sheets',
+    'password.change': 'Mot de passe modifié',
+    'user.create': 'Compte créé',
+    'user.update': 'Compte modifié',
+    'product.create': 'Article ajouté',
+    'product.update': 'Article modifié',
+    'product.delete': 'Article supprimé',
+    'product.image.upload': 'Photo d’article ajoutée'
+};
 
 let currentUser = null;
 let products = [];
 let users = [];
+let orders = [];
+let orderUnreadCount = 0;
 let previewObjectUrl = null;
+let activeOrder = null;
+let ordersPollTimer = null;
+let orderItemsDraft = [];
 
 async function api(url, options = {}) {
     const response = await fetch(url, {
@@ -74,6 +94,8 @@ function escapeHtml(value) {
 }
 
 function showLogin() {
+    if (ordersPollTimer) clearInterval(ordersPollTimer);
+    ordersPollTimer = null;
     currentUser = null;
     document.getElementById('login-view').classList.remove('hidden');
     document.getElementById('account-view').classList.add('hidden');
@@ -105,11 +127,22 @@ function showDashboard(user) {
     document.getElementById('add-product-button').classList.toggle('inline-flex', canManageProducts);
     document.getElementById('users-tab-button').classList.toggle('hidden', !isAdmin);
     document.getElementById('audit-tab-button').classList.toggle('hidden', !isAdmin);
+    document.getElementById('orders-tab-button').classList.toggle('hidden', !isAdmin);
     document.getElementById('new-user-role').disabled = !isAdmin;
     syncUserPermissionVisibility();
+    const defaultPanel = isAdmin ? 'orders-panel' : 'products-panel';
     document.querySelectorAll('.admin-tab').forEach(tab => {
-        tab.setAttribute('aria-current', String(tab.dataset.panel === 'products-panel'));
+        tab.setAttribute('aria-current', String(tab.dataset.panel === defaultPanel));
     });
+    document.querySelectorAll('#dashboard-view > section[id$="-panel"]').forEach(panel => {
+        panel.classList.toggle('hidden', panel.id !== defaultPanel);
+    });
+    if (ordersPollTimer) clearInterval(ordersPollTimer);
+    ordersPollTimer = isAdmin ? window.setInterval(() => {
+        if (document.visibilityState === 'visible' && currentUser?.role === 'admin') {
+            loadOrders().catch(error => console.error('Could not refresh orders:', error));
+        }
+    }, 30000) : null;
     loadDashboard().catch(error => showMessage('products-message', error.message, true));
 }
 
@@ -175,7 +208,228 @@ async function loadDashboard() {
     if (currentUser.role === 'admin') {
         users = accountList;
         renderUsers();
-        await loadAudit();
+        await Promise.all([loadAudit(), loadOrders()]);
+    }
+}
+
+const ORDER_STATUS_LABELS = {
+    pending: 'En attente',
+    confirmed: 'Confirmée',
+    delivered: 'Livrée',
+    cancelled: 'Annulée'
+};
+
+function formatDate(value) {
+    return new Intl.DateTimeFormat('fr-MA', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
+}
+
+function formatOrderItems(order) {
+    return order.items.map(item => `${item.title} × ${item.quantity}`).join(', ');
+}
+
+async function loadOrders(markRead = false) {
+    const result = await api('/api/admin/orders');
+    orders = result.orders;
+    orderUnreadCount = result.unreadCount;
+    if (markRead && orderUnreadCount) {
+        await api('/api/admin/orders/notifications/read', { method: 'POST', body: '{}' });
+        orderUnreadCount = 0;
+        orders.forEach(order => { order.notificationRead = true; });
+    }
+    renderOrders();
+}
+
+function renderOrders(unreadCount = orderUnreadCount) {
+    const badge = document.getElementById('orders-notification-badge');
+    badge.textContent = unreadCount > 99 ? '99+' : String(unreadCount);
+    badge.classList.toggle('hidden', unreadCount === 0);
+    const notification = document.getElementById('orders-notification');
+    notification.classList.toggle('hidden', unreadCount === 0);
+    notification.textContent = unreadCount
+        ? `${unreadCount} nouvelle${unreadCount === 1 ? '' : 's'} commande${unreadCount === 1 ? '' : 's'} à traiter. Les commandes se mettent à jour automatiquement.`
+        : '';
+
+    const counts = Object.fromEntries(Object.keys(ORDER_STATUS_LABELS).map(status => [
+        status,
+        orders.filter(order => order.status === status).length
+    ]));
+    document.getElementById('orders-stat-total').textContent = orders.length;
+    document.getElementById('orders-stat-pending').textContent = counts.pending;
+    document.getElementById('orders-stat-confirmed').textContent = counts.confirmed;
+    document.getElementById('orders-stat-delivered').textContent = counts.delivered;
+    document.getElementById('orders-stat-revenue').textContent = formatPrice(
+        orders.filter(order => order.status === 'delivered').reduce((sum, order) => sum + order.total, 0)
+    );
+    const confirmationsByAdmin = orders.reduce((totals, order) => {
+        if (order.confirmedBy) totals[order.confirmedBy] = (totals[order.confirmedBy] || 0) + 1;
+        return totals;
+    }, {});
+    document.getElementById('orders-confirmations-by-admin').innerHTML = Object.keys(confirmationsByAdmin).length
+        ? Object.entries(confirmationsByAdmin).sort((a, b) => b[1] - a[1]).map(([name, count]) =>
+            `<span class="rounded-full bg-gray-100 px-3 py-1"><strong>${escapeHtml(name)}</strong> : ${count} confirmation${count === 1 ? '' : 's'}</span>`
+        ).join('')
+        : '<span class="text-gray-500">Aucune commande confirmée pour le moment.</span>';
+
+    const adminFilter = document.getElementById('orders-filter-admin');
+    const selectedAdmin = adminFilter.value;
+    const confirmers = [...new Set(orders.map(order => order.confirmedBy).filter(Boolean))].sort();
+    adminFilter.innerHTML = '<option value="">Tous les admins</option>' + confirmers.map(name =>
+        `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`
+    ).join('');
+    adminFilter.value = confirmers.includes(selectedAdmin) ? selectedAdmin : '';
+
+    const query = document.getElementById('orders-search').value.trim().toLocaleLowerCase();
+    const status = document.getElementById('orders-filter-status').value;
+    const from = document.getElementById('orders-filter-from').value;
+    const to = document.getElementById('orders-filter-to').value;
+    const confirmer = adminFilter.value;
+    const filtered = orders.filter(order => {
+        const text = `${order.id} ${order.customer.firstName} ${order.customer.lastName} ${order.customer.phone} ${order.customer.address} ${formatOrderItems(order)}`.toLocaleLowerCase();
+        const day = order.createdAt.slice(0, 10);
+        return (!query || text.includes(query))
+            && (!status || order.status === status)
+            && (!from || day >= from)
+            && (!to || day <= to)
+            && (!confirmer || order.confirmedBy === confirmer);
+    });
+    document.getElementById('orders-count-label').textContent = `${filtered.length} commande${filtered.length === 1 ? '' : 's'} affichée${filtered.length === 1 ? '' : 's'} sur ${orders.length}`;
+    const body = document.getElementById('orders-table-body');
+    body.innerHTML = filtered.map(order => {
+        const canEdit = ['pending', 'confirmed'].includes(order.status);
+        const statusClass = {
+            pending: 'bg-amber-100 text-amber-900',
+            confirmed: 'bg-blue-100 text-blue-900',
+            delivered: 'bg-green-100 text-green-900',
+            cancelled: 'bg-red-100 text-red-900'
+        }[order.status];
+        const syncLabel = order.sheetsSynced ? '' : '<span class="mt-1 block text-xs text-red-700">Non synchronisée avec Sheets</span>';
+        return `<tr class="${order.notificationRead ? '' : 'bg-red-50/40'}">
+            <td class="px-4 py-3 align-top"><time class="whitespace-nowrap">${escapeHtml(formatDate(order.createdAt))}</time><p class="mt-1 max-w-40 truncate font-mono text-[10px] text-gray-400" title="${escapeHtml(order.id)}">${escapeHtml(order.id)}</p>${syncLabel}</td>
+            <td class="px-4 py-3 align-top"><p class="font-semibold">${escapeHtml(order.customer.firstName)} ${escapeHtml(order.customer.lastName)}</p><a class="mt-1 block text-xs text-blue-700 underline" href="tel:${escapeHtml(order.customer.phone)}">${escapeHtml(order.customer.phone)}</a><p class="mt-1 max-w-56 text-xs text-gray-500">${escapeHtml(order.customer.address)}</p></td>
+            <td class="max-w-64 px-4 py-3 align-top text-xs">${escapeHtml(formatOrderItems(order))}</td>
+            <td class="whitespace-nowrap px-4 py-3 align-top font-bold">${formatPrice(order.total)}</td>
+            <td class="px-4 py-3 align-top"><span class="rounded-full px-2.5 py-1 text-xs font-bold ${statusClass}">${ORDER_STATUS_LABELS[order.status]}</span>${order.confirmedBy ? `<p class="mt-2 text-xs text-gray-500">Par ${escapeHtml(order.confirmedBy)}</p>` : ''}${order.deliveredBy ? `<p class="mt-1 text-xs text-gray-500">Livrée par ${escapeHtml(order.deliveredBy)}</p>` : ''}</td>
+            <td class="px-4 py-3 text-right align-top"><div class="flex flex-wrap justify-end gap-1">
+                <button type="button" data-order-view="${order.id}" class="rounded-md border border-gray-200 px-2 py-1.5 text-xs font-semibold hover:bg-gray-50">Détails</button>
+                ${canEdit ? `<button type="button" data-order-edit="${order.id}" class="rounded-md border border-gray-200 px-2 py-1.5 text-xs font-semibold hover:bg-gray-50">Modifier</button>` : ''}
+                ${order.status === 'pending' ? `<button type="button" data-order-status="confirmed" data-order-id="${order.id}" class="rounded-md bg-blue-700 px-2 py-1.5 text-xs font-semibold text-white">Confirmer</button>` : ''}
+                ${order.status === 'confirmed' ? `<button type="button" data-order-status="delivered" data-order-id="${order.id}" class="rounded-md bg-green-700 px-2 py-1.5 text-xs font-semibold text-white">Livrée</button>` : ''}
+                ${['pending', 'confirmed'].includes(order.status) ? `<button type="button" data-order-status="cancelled" data-order-id="${order.id}" class="rounded-md border border-red-200 px-2 py-1.5 text-xs font-semibold text-red-700">Annuler</button>` : ''}
+            </div></td>
+        </tr>`;
+    }).join('');
+    document.getElementById('orders-empty').classList.toggle('hidden', filtered.length > 0);
+    body.querySelectorAll('[data-order-view]').forEach(button => button.addEventListener('click', () => openOrderDialog(button.dataset.orderView)));
+    body.querySelectorAll('[data-order-edit]').forEach(button => button.addEventListener('click', () => openOrderDialog(button.dataset.orderEdit, true)));
+    body.querySelectorAll('[data-order-status]').forEach(button => button.addEventListener('click', () => updateOrderStatus(button.dataset.orderId, button.dataset.orderStatus)));
+}
+
+function renderOrderItemEditors() {
+    const container = document.getElementById('order-edit-items');
+    container.innerHTML = orderItemsDraft.map((item, index) => {
+        const selectedExists = products.some(product => product.id === item.productId);
+        const options = products.map(product =>
+            `<option value="${product.id}" ${product.id === item.productId ? 'selected' : ''}>${escapeHtml(product.title)} — ${formatPrice(product.price)}</option>`
+        );
+        if (!selectedExists) options.unshift(`<option value="${item.productId}" selected>${escapeHtml(item.title)} (article archivé)</option>`);
+        return `<div class="grid grid-cols-[1fr_6rem_auto] items-end gap-2">
+            <label class="text-xs font-semibold text-gray-600">Article<select data-order-item-product="${index}" class="mt-1 w-full rounded-lg border border-gray-300 bg-white px-2 py-2 text-sm font-normal">${options.join('')}</select></label>
+            <label class="text-xs font-semibold text-gray-600">Quantité<input data-order-item-quantity="${index}" type="number" min="1" max="20" required value="${item.quantity}" class="mt-1 w-full rounded-lg border border-gray-300 px-2 py-2 text-sm font-normal"></label>
+            <button type="button" data-order-item-remove="${index}" aria-label="Supprimer l’article" class="rounded-lg border border-red-200 px-3 py-2 text-sm text-red-700 hover:bg-red-50"><i class="fa-solid fa-trash" aria-hidden="true"></i></button>
+        </div>`;
+    }).join('');
+    container.querySelectorAll('[data-order-item-product]').forEach(select => select.addEventListener('change', () => {
+        const index = Number(select.dataset.orderItemProduct);
+        const product = products.find(item => item.id === Number(select.value));
+        if (product) orderItemsDraft[index] = { productId: product.id, title: product.title, quantity: orderItemsDraft[index].quantity };
+    }));
+    container.querySelectorAll('[data-order-item-quantity]').forEach(input => input.addEventListener('input', () => {
+        orderItemsDraft[Number(input.dataset.orderItemQuantity)].quantity = Number(input.value);
+    }));
+    container.querySelectorAll('[data-order-item-remove]').forEach(button => button.addEventListener('click', () => {
+        orderItemsDraft.splice(Number(button.dataset.orderItemRemove), 1);
+        renderOrderItemEditors();
+    }));
+}
+
+function openOrderDialog(orderId, editing = false) {
+    activeOrder = orders.find(order => order.id === orderId);
+    if (!activeOrder) return;
+    const form = document.getElementById('order-form');
+    form.reset();
+    document.getElementById('order-dialog-message').classList.add('hidden');
+    document.getElementById('order-dialog-title').textContent = editing ? 'Modifier la commande' : 'Détails de la commande';
+    document.getElementById('order-dialog-kicker').textContent = `${ORDER_STATUS_LABELS[activeOrder.status]} — ${formatDate(activeOrder.createdAt)}`;
+    document.getElementById('order-dialog-details').innerHTML = `<div class="grid gap-3 sm:grid-cols-2">
+        <p><strong>Client :</strong> ${escapeHtml(activeOrder.customer.firstName)} ${escapeHtml(activeOrder.customer.lastName)}</p>
+        <p><strong>Téléphone :</strong> <a class="text-blue-700 underline" href="tel:${escapeHtml(activeOrder.customer.phone)}">${escapeHtml(activeOrder.customer.phone)}</a></p>
+        <p class="sm:col-span-2"><strong>Adresse / localisation :</strong> ${escapeHtml(activeOrder.customer.address)}</p>
+        <div class="sm:col-span-2"><strong>Articles :</strong><ul class="mt-1 list-inside list-disc">${activeOrder.items.map(item => `<li>${escapeHtml(item.title)} — ${item.quantity} × ${formatPrice(item.unitPrice)} = ${formatPrice(item.lineTotal)}</li>`).join('')}</ul></div>
+        <p><strong>Total :</strong> ${formatPrice(activeOrder.total)}</p>
+        <p><strong>Référence :</strong> <span class="font-mono text-xs">${escapeHtml(activeOrder.id)}</span></p>
+        ${activeOrder.confirmedBy ? `<p><strong>Confirmée par :</strong> ${escapeHtml(activeOrder.confirmedBy)} — ${escapeHtml(formatDate(activeOrder.confirmedAt))}</p>` : ''}
+        ${activeOrder.deliveredBy ? `<p><strong>Livrée par :</strong> ${escapeHtml(activeOrder.deliveredBy)} — ${escapeHtml(formatDate(activeOrder.deliveredAt))}</p>` : ''}
+        ${activeOrder.cancelledBy ? `<p><strong>Annulée par :</strong> ${escapeHtml(activeOrder.cancelledBy)} — ${escapeHtml(formatDate(activeOrder.cancelledAt))}</p>` : ''}
+        <p><strong>Google Sheets :</strong> ${activeOrder.sheetsSynced ? 'Synchronisée' : 'À vérifier'}</p>
+    </div>`;
+    const editFields = document.getElementById('order-edit-fields');
+    editFields.classList.toggle('hidden', !editing);
+    form.elements.firstName.value = activeOrder.customer.firstName;
+    form.elements.lastName.value = activeOrder.customer.lastName;
+    form.elements.phone.value = activeOrder.customer.phone;
+    form.elements.address.value = activeOrder.customer.address;
+    orderItemsDraft = activeOrder.items.map(item => ({ ...item }));
+    if (editing) renderOrderItemEditors();
+    const canEdit = ['pending', 'confirmed'].includes(activeOrder.status);
+    document.getElementById('order-confirm-button').classList.toggle('hidden', activeOrder.status !== 'pending');
+    document.getElementById('order-deliver-button').classList.toggle('hidden', activeOrder.status !== 'confirmed');
+    document.getElementById('order-cancel-button').classList.toggle('hidden', !canEdit);
+    document.getElementById('order-edit-button').classList.toggle('hidden', !canEdit || editing);
+    document.getElementById('order-save-button').classList.toggle('hidden', !editing);
+    document.getElementById('order-dialog').showModal();
+}
+
+async function updateOrderStatus(orderId, status) {
+    const order = orders.find(item => item.id === orderId);
+    if (!order) return;
+    const action = { confirmed: 'confirmer', delivered: 'marquer comme livrée', cancelled: 'annuler' }[status];
+    if (!window.confirm(`Voulez-vous ${action} la commande de ${order.customer.firstName} ${order.customer.lastName} ?`)) return;
+    try {
+        const result = await api(`/api/admin/orders/${orderId}/status`, { method: 'POST', body: JSON.stringify({ status }) });
+        showMessage('orders-message', result.sheetsSynced
+            ? `Commande ${ORDER_STATUS_LABELS[status].toLocaleLowerCase()} et synchronisée avec Google Sheets.`
+            : `Commande ${ORDER_STATUS_LABELS[status].toLocaleLowerCase()} dans l’administration, mais la synchronisation Sheets a échoué.`, !result.sheetsSynced);
+        await Promise.all([loadOrders(), loadAudit()]);
+        if (activeOrder?.id === orderId && document.getElementById('order-dialog').open) openOrderDialog(orderId);
+    } catch (error) {
+        showMessage('orders-message', error.message, true);
+    }
+}
+
+async function saveOrder(event) {
+    event.preventDefault();
+    if (!activeOrder) return;
+    const form = event.currentTarget;
+    try {
+        const result = await api(`/api/admin/orders/${activeOrder.id}`, {
+            method: 'PUT',
+            body: JSON.stringify({
+                firstName: form.elements.firstName.value.trim(),
+                lastName: form.elements.lastName.value.trim(),
+                phone: form.elements.phone.value.trim(),
+                address: form.elements.address.value.trim(),
+                items: orderItemsDraft.map(item => ({ productId: item.productId, quantity: item.quantity }))
+            })
+        });
+        document.getElementById('order-dialog').close();
+        showMessage('orders-message', result.sheetsSynced
+            ? 'Commande modifiée et synchronisée avec Google Sheets.'
+            : 'Commande modifiée dans l’administration, mais la synchronisation Sheets a échoué.', !result.sheetsSynced);
+        await Promise.all([loadOrders(), loadAudit()]);
+    } catch (error) {
+        const message = document.getElementById('order-dialog-message');
+        message.textContent = error.message;
+        message.className = 'rounded-lg bg-red-50 p-3 text-sm text-red-700';
     }
 }
 
@@ -407,7 +661,7 @@ async function loadAudit() {
     const entries = await api('/api/admin/audit');
     document.getElementById('audit-list').innerHTML = entries.length ? entries.map(entry => `
         <article class="flex flex-wrap items-center justify-between gap-2 py-4">
-            <div><p class="font-semibold text-brand-blue">${escapeHtml(entry.action)} <span class="font-normal text-gray-500">— ${escapeHtml(entry.subject)}</span></p><p class="mt-1 text-xs text-gray-500">Par ${escapeHtml(entry.actor)}</p></div>
+            <div><p class="font-semibold text-brand-blue">${escapeHtml(ACTIVITY_LABELS[entry.action] || entry.action)} <span class="font-normal text-gray-500">— ${escapeHtml(entry.subject)}</span></p><p class="mt-1 text-xs text-gray-500">Par ${escapeHtml(entry.actor)}</p>${entry.details ? `<p class="mt-1 max-w-3xl text-xs text-gray-600">${escapeHtml(entry.details)}</p>` : ''}</div>
             <time class="text-xs text-gray-500">${new Intl.DateTimeFormat('fr-MA', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(entry.at))}</time>
         </article>
     `).join('') : '<p class="py-8 text-center text-sm text-gray-500">Aucune activité enregistrée pour le moment.</p>';
@@ -442,6 +696,11 @@ function switchPanel(event) {
     document.querySelectorAll('#dashboard-view > section[id$="-panel"]').forEach(panel => {
         panel.classList.toggle('hidden', panel.id !== tab.dataset.panel);
     });
+    if (tab.dataset.panel === 'orders-panel') {
+        loadOrders(true).catch(error => showMessage('orders-message', error.message, true));
+    } else if (tab.dataset.panel === 'audit-panel') {
+        loadAudit().catch(error => console.error('Could not load activity:', error));
+    }
 }
 
 async function login(event) {
@@ -512,5 +771,33 @@ document.querySelector('#product-form [name="imageFile"]').addEventListener('cha
 });
 document.getElementById('new-user-role').addEventListener('change', syncUserPermissionVisibility);
 document.getElementById('product-search').addEventListener('input', renderProducts);
+document.getElementById('orders-search').addEventListener('input', () => renderOrders());
+document.getElementById('orders-filter-status').addEventListener('change', () => renderOrders());
+document.getElementById('orders-filter-from').addEventListener('change', () => renderOrders());
+document.getElementById('orders-filter-to').addEventListener('change', () => renderOrders());
+document.getElementById('orders-filter-admin').addEventListener('change', () => renderOrders());
+document.getElementById('orders-refresh-button').addEventListener('click', () => {
+    loadOrders().catch(error => showMessage('orders-message', error.message, true));
+});
+document.getElementById('order-form').addEventListener('submit', saveOrder);
+document.getElementById('order-dialog-close').addEventListener('click', () => document.getElementById('order-dialog').close());
+document.getElementById('order-edit-button').addEventListener('click', () => {
+    if (activeOrder) openOrderDialog(activeOrder.id, true);
+});
+document.getElementById('order-add-item').addEventListener('click', () => {
+    const product = products[0];
+    if (!product) return;
+    orderItemsDraft.push({ productId: product.id, title: product.title, quantity: 1 });
+    renderOrderItemEditors();
+});
+document.getElementById('order-confirm-button').addEventListener('click', () => {
+    if (activeOrder) updateOrderStatus(activeOrder.id, 'confirmed');
+});
+document.getElementById('order-deliver-button').addEventListener('click', () => {
+    if (activeOrder) updateOrderStatus(activeOrder.id, 'delivered');
+});
+document.getElementById('order-cancel-button').addEventListener('click', () => {
+    if (activeOrder) updateOrderStatus(activeOrder.id, 'cancelled');
+});
 document.querySelectorAll('.admin-tab').forEach(button => button.addEventListener('click', switchPanel));
 restoreSession();
