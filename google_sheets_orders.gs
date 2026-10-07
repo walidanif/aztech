@@ -8,9 +8,8 @@
 const ORDERS_SHEET_NAME = 'Commandes';
 const ORDERS_SPREADSHEET_ID = '1-8IlfZO8Pd17atBKQ7jG5N9AxS17kTTEf1_MCwlUrcU';
 const ORDER_HEADERS = [
-  'Référence', 'Date de réception', 'Prénom', 'Nom', 'Téléphone',
-  'Adresse de livraison', 'ID produit', 'Produit', 'Quantité',
-  'Prix unitaire (DH)', 'Total (DH)', 'Devise', 'Nom complet'
+  'Prénom', 'Nom', 'Numéro de téléphone', 'Adresse de livraison',
+  'Quantité', 'ARTICLE', 'Prix unitaire (DH)', 'Total (DH)'
 ];
 
 // Keep these IDs and prices in sync with the products array in the HTML file.
@@ -46,15 +45,24 @@ function doGet() {
 }
 
 function doPost(e) {
+  const lock = LockService.getScriptLock();
   try {
-    const data = JSON.parse(e.postData.contents || '{}');
-    const firstName = cleanText(data.firstName, 80);
-    const lastName = cleanText(data.lastName, 80);
-    const phone = cleanText(data.phone, 24);
-    const address = cleanText(data.address, 500);
+    if (!e || !e.postData || !e.postData.contents) {
+      throw new Error('Missing order data.');
+    }
+    const data = JSON.parse(e.postData.contents);
+    const firstName = cleanText(data.firstName || data.prenom || data.first_name, 80);
+    const lastName = cleanText(data.lastName || data.nom || data.last_name, 80);
+    const phone = cleanText(data.phone || data.telephone || data.mobile, 24);
+    const address = cleanText(data.address || data.adresse, 500);
     const requestedItems = Array.isArray(data.items)
       ? data.items
-      : [{ productId: data.productId, quantity: data.quantity }];
+      : [{
+          productId: data.productId,
+          product: data.product || data.article,
+          unitPrice: data.unitPrice,
+          quantity: data.quantity
+        }];
 
     if (!firstName || !lastName || !address || !/^\+?[0-9 ()\-]{8,24}$/.test(phone)) {
       throw new Error('Missing or invalid customer details.');
@@ -66,46 +74,51 @@ function doPost(e) {
       const productId = Number(item.productId);
       const quantity = Number(item.quantity);
       const product = ORDER_CATALOG[productId];
-      if (!product || !Number.isInteger(quantity) || quantity < 1 || quantity > 20) {
+      if (!Number.isInteger(quantity) || quantity < 1 || quantity > 20) {
         throw new Error('Unknown product or invalid quantity.');
       }
-      return { productId, quantity, product };
+      const title = cleanText(item.product || item.title || (product && product.title), 160);
+      const price = product ? product.price : Number(item.unitPrice);
+      if (!title || !Number.isFinite(price) || price < 0) {
+        throw new Error('Product name or price is missing.');
+      }
+      return { quantity, title, price };
     });
 
+    lock.waitLock(10000);
     const spreadsheet = SpreadsheetApp.openById(ORDERS_SPREADSHEET_ID);
     let sheet = spreadsheet.getSheetByName(ORDERS_SHEET_NAME);
     if (!sheet) sheet = spreadsheet.insertSheet(ORDERS_SHEET_NAME);
     if (sheet.getLastRow() === 0) {
       sheet.appendRow(ORDER_HEADERS);
       sheet.setFrozenRows(1);
-    } else if (!sheet.getRange(1, ORDER_HEADERS.length).getValue()) {
-      sheet.getRange(1, ORDER_HEADERS.length).setValue('Nom complet');
+    } else {
+      if (!sheet.getRange(1, 7).getValue()) {
+        sheet.getRange(1, 7).setValue(ORDER_HEADERS[6]);
+      }
+      if (!sheet.getRange(1, 8).getValue()) {
+        sheet.getRange(1, 8).setValue(ORDER_HEADERS[7]);
+      }
     }
 
-    const reference = Utilities.getUuid();
-    const receivedAt = new Date();
-    const fullName = [firstName, lastName].filter(Boolean).join(' ');
-    const rows = orderItems.map(({ productId, quantity, product }) => [
-      reference,
-      receivedAt,
+    const rows = orderItems.map(({ quantity, title, price }) => [
       safeCell(firstName),
       safeCell(lastName),
       safeCell(phone),
       safeCell(address),
-      productId,
-      product.title,
       quantity,
-      product.price,
-      product.price * quantity,
-      'MAD',
-      safeCell(fullName)
+      safeCell(title),
+      price,
+      price * quantity
     ]);
-    sheet.getRange(sheet.getLastRow() + 1, 1, rows.length, ORDER_HEADERS.length).setValues(rows);
+    sheet.getRange(sheet.getLastRow() + 1, 1, rows.length, 8).setValues(rows);
 
     return ContentService.createTextOutput('OK');
   } catch (error) {
     console.error(error);
     return ContentService.createTextOutput('ERROR: ' + error.message);
+  } finally {
+    if (lock.hasLock()) lock.releaseLock();
   }
 }
 
