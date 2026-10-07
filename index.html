@@ -43,13 +43,11 @@
         button, a { -webkit-tap-highlight-color: transparent; }
         .nav-link { display: inline-flex; min-height: 40px; align-items: center; }
         .nav-link.text-brand-blue { color: #e5091b; border-color: #e5091b; }
-        .brand-wordmark { display: inline-flex; align-items: center; gap: .55rem; white-space: nowrap; }
-        .brand-wordmark-initials { display: inline-flex; font-size: 2.2rem; font-weight: 900; letter-spacing: -.09em; line-height: 1; }
-        .brand-wordmark .brand-a { color: #f3f4f6; }
-        .brand-wordmark .brand-z { color: #e5091b; }
+        .brand-wordmark { display: inline-flex; align-items: center; gap: .45rem; white-space: nowrap; }
+        .brand-wordmark img { height: 2.65rem; width: 4rem; object-fit: contain; }
         .brand-wordmark-copy { display: flex; flex-direction: column; align-items: flex-start; line-height: .95; }
-        .brand-wordmark-tech { color: #fff; font-size: 1.12rem; font-weight: 900; letter-spacing: .08em; }
-        .brand-wordmark-maroc { margin-top: .3rem; color: #d1d2d6; font-size: .62rem; font-weight: 700; letter-spacing: .38em; }
+        .brand-wordmark-tech { color: #fff; font-size: 1rem; font-weight: 900; letter-spacing: .08em; }
+        .brand-wordmark-maroc { margin-top: .25rem; color: #d1d2d6; font-size: .58rem; font-weight: 700; letter-spacing: .32em; }
         .category-banner-image { transform: scale(1); transition: transform .3s ease; }
         .category-banner:hover .category-banner-image { transform: scale(1.06); }
         .hero-banner { background: radial-gradient(ellipse at 85% 15%, #252529 0%, #101012 54%, #080809 100%); }
@@ -58,20 +56,9 @@
 </head>
 <body class="text-gray-800">
 
-    <!-- Top Bar -->
-    <div class="bg-brand-blue py-1.5 text-[11px] text-white/90 sm:py-2 sm:text-xs">
-        <div class="container mx-auto flex flex-row items-center justify-between gap-2 px-3 sm:px-4">
-            <span data-i18n="shipping">توصيل لجميع أنحاء المغرب</span>
-            <div class="flex flex-wrap items-center justify-center gap-x-4 gap-y-0">
-                <a href="#" onclick="contactOrderTracking(event)" class="hover:text-brand-orange" data-i18n="track">Suivi de commande</a>
-                <a href="#" onclick="openWhatsApp(event)" class="hover:text-brand-orange" data-i18n="contact">Contact</a>
-            </div>
-        </div>
-    </div>
-
     <!-- Main Header -->
     <header class="bg-brand-blue text-white sticky top-0 z-50 shadow-md">
-        <div class="container mx-auto flex items-center justify-between gap-2 px-3 py-2 sm:px-4 lg:gap-6 lg:py-3">
+        <div class="container mx-auto flex items-center justify-between gap-2 px-3 py-1 sm:px-4 sm:py-1.5 lg:gap-6">
             <div class="flex shrink-0 items-center gap-1 lg:hidden">
                 <button id="mobile-menu-button" type="button" onclick="openDrawer('category-drawer')" class="flex h-11 w-11 items-center justify-center rounded-lg text-xl text-white transition hover:bg-white/10" aria-label="Ouvrir les catégories" aria-controls="category-drawer" aria-expanded="false">
                     <i class="fa-solid fa-bars" aria-hidden="true"></i>
@@ -84,7 +71,7 @@
 
             <a href="#" onclick="switchTab('accueil')" class="absolute left-1/2 flex -translate-x-1/2 items-center justify-center lg:static lg:translate-x-0 lg:flex-none lg:justify-start" aria-label="AZ TECH Maroc, accueil">
                 <span class="brand-wordmark" aria-hidden="true">
-                    <span class="brand-wordmark-initials"><span class="brand-a">A</span><span class="brand-z">Z</span></span>
+                    <img src="/assets/az-symbol.png" alt="" fetchpriority="high">
                     <span class="brand-wordmark-copy"><span class="brand-wordmark-tech">TECH</span><span class="brand-wordmark-maroc">MAROC</span></span>
                 </span>
             </a>
@@ -121,7 +108,7 @@
         <!-- Navigation Menu -->
         <nav class="hidden bg-white text-gray-800 border-b border-gray-200 shadow-sm lg:block">
             <div class="container mx-auto px-4 overflow-x-auto hide-scroll">
-                <ul class="flex min-w-max gap-4 sm:gap-8 text-sm font-medium py-2 whitespace-nowrap">
+                <ul class="flex min-w-max gap-4 sm:gap-8 text-sm font-medium py-1 whitespace-nowrap">
                     <li><button onclick="switchTab('accueil')" id="nav-accueil" class="nav-link text-brand-blue border-b-2 border-brand-blue font-bold pb-1 hover:text-brand-blue transition" data-i18n="home">الرئيسية</button></li>
                     <li><button onclick="switchTab('catalogue')" id="nav-catalogue" class="nav-link text-gray-600 hover:text-brand-blue transition" data-i18n="allProducts">جميع المنتجات</button></li>
                     <li><button onclick="switchTab('telephones')" id="nav-telephones" class="nav-link text-gray-600 hover:text-brand-blue transition" data-i18n="phones">الهواتف</button></li>
@@ -413,7 +400,7 @@
                 <div>
                     <div class="mb-3 flex items-center gap-2" role="img" aria-label="AZ TECH Maroc">
                         <span class="brand-wordmark">
-                            <span class="brand-wordmark-initials"><span class="brand-a">A</span><span class="brand-z">Z</span></span>
+                            <img src="/assets/az-symbol.png" alt="" loading="lazy">
                             <span class="brand-wordmark-copy"><span class="brand-wordmark-tech">TECH</span><span class="brand-wordmark-maroc">MAROC</span></span>
                         </span>
                     </div>
