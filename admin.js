@@ -32,6 +32,7 @@ let products = [];
 let users = [];
 let orders = [];
 let orderUnreadCount = 0;
+let ordersSheetsConfigured = false;
 let previewObjectUrl = null;
 let activeOrder = null;
 let ordersPollTimer = null;
@@ -267,6 +268,7 @@ async function loadOrders(markRead = false) {
     const result = await api('/api/admin/orders');
     orders = result.orders;
     orderUnreadCount = result.unreadCount;
+    ordersSheetsConfigured = result.sheetsSyncConfigured;
     if (markRead && orderUnreadCount) {
         await api('/api/admin/orders/notifications/read', { method: 'POST', body: '{}' });
         orderUnreadCount = 0;
@@ -339,7 +341,9 @@ function renderOrders(unreadCount = orderUnreadCount) {
             delivered: 'bg-green-100 text-green-900',
             cancelled: 'bg-red-100 text-red-900'
         }[order.status];
-        const syncLabel = order.sheetsSynced ? '' : '<span class="mt-1 block text-xs text-red-700">Non synchronisée avec Sheets</span>';
+        const syncLabel = ordersSheetsConfigured && !order.sheetsSynced
+            ? '<span class="mt-1 block text-xs text-red-700">Non synchronisée avec Sheets</span>'
+            : '';
         return `<tr class="${order.notificationRead ? '' : 'bg-red-50/40'}">
             <td class="px-4 py-3 align-top"><time class="whitespace-nowrap">${escapeHtml(formatDate(order.createdAt))}</time><p class="mt-1 max-w-40 truncate font-mono text-[10px] text-gray-400" title="${escapeHtml(order.id)}">${escapeHtml(order.id)}</p>${syncLabel}</td>
             <td class="px-4 py-3 align-top"><p class="font-semibold">${escapeHtml(order.customer.firstName)} ${escapeHtml(order.customer.lastName)}</p><a class="mt-1 block text-xs text-blue-700 underline" href="tel:${escapeHtml(order.customer.phone)}">${escapeHtml(order.customer.phone)}</a><p class="mt-1 max-w-56 text-xs text-gray-500">${escapeHtml(order.customer.address)}</p></td>
@@ -407,7 +411,7 @@ function openOrderDialog(orderId, editing = false) {
         ${activeOrder.confirmedBy ? `<p><strong>Confirmée par :</strong> ${escapeHtml(activeOrder.confirmedBy)} — ${escapeHtml(formatDate(activeOrder.confirmedAt))}</p>` : ''}
         ${activeOrder.deliveredBy ? `<p><strong>Livrée par :</strong> ${escapeHtml(activeOrder.deliveredBy)} — ${escapeHtml(formatDate(activeOrder.deliveredAt))}</p>` : ''}
         ${activeOrder.cancelledBy ? `<p><strong>Annulée par :</strong> ${escapeHtml(activeOrder.cancelledBy)} — ${escapeHtml(formatDate(activeOrder.cancelledAt))}</p>` : ''}
-        <p><strong>Google Sheets :</strong> ${activeOrder.sheetsSynced ? 'Synchronisée' : 'À vérifier'}</p>
+        ${ordersSheetsConfigured ? `<p><strong>Google Sheets :</strong> ${activeOrder.sheetsSynced ? 'Synchronisée' : 'À vérifier'}</p>` : ''}
     </div>`;
     const editFields = document.getElementById('order-edit-fields');
     editFields.classList.toggle('hidden', !editing);
@@ -447,17 +451,20 @@ async function updateOrderStatus(orderId, status, actionButton = null) {
         }
         orders = orders.map(item => item.id === orderId ? result.order : item);
         renderOrders();
-        const successMessage = result.alreadyApplied
-            ? result.sheetsSynced
-                ? `Cette commande était déjà ${ORDER_STATUS_LABELS[status].toLocaleLowerCase()} et synchronisée avec Google Sheets.`
-                : `Cette commande était déjà ${ORDER_STATUS_LABELS[status].toLocaleLowerCase()}. La synchronisation Google Sheets est à vérifier.`
-            : result.sheetsSynced
-                ? `Commande ${ORDER_STATUS_LABELS[status].toLocaleLowerCase()} et synchronisée avec Google Sheets.`
-                : `Commande ${ORDER_STATUS_LABELS[status].toLocaleLowerCase()} enregistrée. La synchronisation Google Sheets a échoué ; vérifiez le journal d’activité.`;
-        showMessage('orders-message', successMessage, !result.sheetsSynced);
+        const statusLabel = ORDER_STATUS_LABELS[status].toLocaleLowerCase();
+        const successMessage = !result.sheetsSyncConfigured
+            ? `Commande ${statusLabel} enregistrée.`
+            : result.alreadyApplied
+                ? result.sheetsSynced
+                    ? `Cette commande était déjà ${statusLabel} et synchronisée avec Google Sheets.`
+                    : `Cette commande était déjà ${statusLabel}. La synchronisation Google Sheets est à vérifier.`
+                : result.sheetsSynced
+                    ? `Commande ${statusLabel} et synchronisée avec Google Sheets.`
+                    : `Commande ${statusLabel} enregistrée. La synchronisation Google Sheets a échoué ; vérifiez le journal d’activité.`;
+        showMessage('orders-message', successMessage, result.sheetsSyncConfigured && !result.sheetsSynced);
         if (isOrderDialogOpen()) {
             openOrderDialog(orderId);
-            showMessage('order-dialog-message', successMessage, !result.sheetsSynced);
+            showMessage('order-dialog-message', successMessage, result.sheetsSyncConfigured && !result.sheetsSynced);
         }
         loadOrders().catch(error => {
             console.error('The order status was saved, but the order list could not be refreshed:', error);
@@ -493,9 +500,12 @@ async function saveOrder(event) {
             })
         });
         document.getElementById('order-dialog').close();
-        showMessage('orders-message', result.sheetsSynced
-            ? 'Commande modifiée et synchronisée avec Google Sheets.'
-            : 'Commande modifiée dans l’administration, mais la synchronisation Sheets a échoué.', !result.sheetsSynced);
+        showMessage('orders-message', !result.sheetsSyncConfigured
+            ? 'Commande modifiée.'
+            : result.sheetsSynced
+                ? 'Commande modifiée et synchronisée avec Google Sheets.'
+                : 'Commande modifiée dans l’administration, mais la synchronisation Sheets a échoué.',
+        result.sheetsSyncConfigured && !result.sheetsSynced);
         await Promise.all([loadOrders(), loadAudit()]);
     } catch (error) {
         const message = document.getElementById('order-dialog-message');

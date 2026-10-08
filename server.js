@@ -9,7 +9,7 @@ const { promisify } = require('node:util');
 const scrypt = promisify(crypto.scrypt);
 const ROOT = __dirname;
 const IS_VERCEL = Boolean(process.env.VERCEL);
-const GOOGLE_SHEETS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzf_o8grtzZmsRIKetzw9tWTmKO7tafuPElNSph2fzMyIE5f1qrG9IZ4nwMj2U2OYve/exec';
+const GOOGLE_SHEETS_WEB_APP_URL = process.env.GOOGLE_SHEETS_WEB_APP_URL || '';
 const DATA_DIR = path.resolve(process.env.AZ_DATA_DIR || path.join(ROOT, 'data'));
 const STORE_FILE = path.join(DATA_DIR, 'store.json');
 const SEED_FILE = path.join(ROOT, 'data', 'products.json');
@@ -464,6 +464,7 @@ function formatOrderSummary(order) {
 }
 
 async function syncOrderWithSheets(operation, order) {
+    if (!GOOGLE_SHEETS_WEB_APP_URL) return null;
     try {
         const response = await fetch(GOOGLE_SHEETS_WEB_APP_URL, {
             method: 'POST',
@@ -501,13 +502,13 @@ async function syncOrderWithSheets(operation, order) {
 async function persistOrderSheetsStatus(order, operation, actor) {
     order.updatedAt = new Date().toISOString();
     const error = await syncOrderWithSheets(operation, order);
-    order.sheetsSynced = !error;
+    order.sheetsSynced = error === null ? null : !error;
     if (error) {
         audit(actor, 'order.sheets_sync_failed', order.id, error);
         console.error(`Order ${order.id} was saved in the admin panel but did not sync to Sheets: ${error}`);
     }
     await writeStore();
-    return !error;
+    return error === null ? null : !error;
 }
 
 async function revokeUserSessions(userId) {
@@ -622,7 +623,12 @@ async function handleApi(req, res, url) {
         await writeStore();
 
         const sheetsSynced = await persistOrderSheetsStatus(order, 'create', { username: 'System' });
-        return sendJson(res, 201, { ok: true, order, sheetsSynced });
+        return sendJson(res, 201, {
+            ok: true,
+            order,
+            sheetsSynced,
+            sheetsSyncConfigured: Boolean(GOOGLE_SHEETS_WEB_APP_URL)
+        });
     }
 
     if (req.method === 'GET' && url.pathname === '/api/products') {
@@ -708,7 +714,8 @@ async function handleApi(req, res, url) {
             const unreadCount = store.orders.filter(order => !order.notificationRead).length;
             return sendJson(res, 200, {
                 orders: [...store.orders].sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt)),
-                unreadCount
+                unreadCount,
+                sheetsSyncConfigured: Boolean(GOOGLE_SHEETS_WEB_APP_URL)
             });
         }
         if (req.method === 'POST' && url.pathname === '/api/admin/orders/notifications/read') {
@@ -729,7 +736,12 @@ async function handleApi(req, res, url) {
             const statusData = await readJson(req);
             const status = statusData && statusData.status;
             if (status === order.status && ['confirmed', 'delivered', 'cancelled'].includes(status)) {
-                return sendJson(res, 200, { order, sheetsSynced: Boolean(order.sheetsSynced), alreadyApplied: true });
+                return sendJson(res, 200, {
+                    order,
+                    sheetsSynced: Boolean(order.sheetsSynced),
+                    sheetsSyncConfigured: Boolean(GOOGLE_SHEETS_WEB_APP_URL),
+                    alreadyApplied: true
+                });
             }
             const now = new Date().toISOString();
             if (status === 'confirmed' && order.status === 'pending') {
@@ -752,7 +764,11 @@ async function handleApi(req, res, url) {
             audit(user, `order.${status}`, order.id, `${order.customer.firstName} ${order.customer.lastName}; ${formatOrderSummary(order)}`);
             await writeStore();
             const sheetsSynced = await persistOrderSheetsStatus(order, 'status', user);
-            return sendJson(res, 200, { order, sheetsSynced });
+            return sendJson(res, 200, {
+                order,
+                sheetsSynced,
+                sheetsSyncConfigured: Boolean(GOOGLE_SHEETS_WEB_APP_URL)
+            });
         }
         const orderMatch = url.pathname.match(/^\/api\/admin\/orders\/([0-9a-f-]{36})$/i);
         if (req.method === 'PUT' && orderMatch) {
@@ -803,7 +819,11 @@ async function handleApi(req, res, url) {
             audit(user, 'order.updated', order.id, `${firstName} ${lastName}; ancien: ${previousSummary}; nouveau: ${formatOrderSummary(order)}`);
             await writeStore();
             const sheetsSynced = await persistOrderSheetsStatus(order, 'update', user);
-            return sendJson(res, 200, { order, sheetsSynced });
+            return sendJson(res, 200, {
+                order,
+                sheetsSynced,
+                sheetsSyncConfigured: Boolean(GOOGLE_SHEETS_WEB_APP_URL)
+            });
         }
         if (req.method === 'GET' && url.pathname === '/api/admin/users') {
             if (user.forcePasswordChange) throw httpError(403, 'Change the temporary password before using the administration panel.');
