@@ -403,29 +403,44 @@ async function updateOrderStatus(orderId, status, actionButton = null) {
     if (!order) return;
     const action = { confirmed: 'confirmer', delivered: 'marquer comme livrée', cancelled: 'annuler' }[status];
     if (!window.confirm(`Voulez-vous ${action} la commande de ${order.customer.firstName} ${order.customer.lastName} ?`)) return;
+    const orderDialog = document.getElementById('order-dialog');
+    const isOrderDialogOpen = () => activeOrder?.id === orderId && orderDialog.open;
     if (actionButton) {
         actionButton.disabled = true;
         actionButton.textContent = 'En cours...';
     }
+    const progressMessage = `Enregistrement de la commande (${ORDER_STATUS_LABELS[status].toLocaleLowerCase()})...`;
+    if (isOrderDialogOpen()) showMessage('order-dialog-message', progressMessage);
+    else showMessage('orders-message', progressMessage);
     try {
         const result = await api(`/api/admin/orders/${orderId}/status`, { method: 'POST', body: JSON.stringify({ status }) });
-        if (result.order) {
-            orders = orders.map(item => item.id === orderId ? result.order : item);
-            renderOrders();
+        if (!result.order || result.order.status !== status) {
+            throw new Error('Le serveur n’a pas confirmé le changement de statut. Actualisez les commandes avant de réessayer.');
         }
-        showMessage('orders-message', result.sheetsSynced
-            ? `Commande ${ORDER_STATUS_LABELS[status].toLocaleLowerCase()} et synchronisée avec Google Sheets.`
-            : `Commande ${ORDER_STATUS_LABELS[status].toLocaleLowerCase()} et enregistrée. La synchronisation Google Sheets a échoué ; vérifiez le journal d’activité.`, !result.sheetsSynced);
-        try {
-            await loadOrders();
-        } catch (error) {
+        orders = orders.map(item => item.id === orderId ? result.order : item);
+        renderOrders();
+        const successMessage = result.alreadyApplied
+            ? result.sheetsSynced
+                ? `Cette commande était déjà ${ORDER_STATUS_LABELS[status].toLocaleLowerCase()} et synchronisée avec Google Sheets.`
+                : `Cette commande était déjà ${ORDER_STATUS_LABELS[status].toLocaleLowerCase()}. La synchronisation Google Sheets est à vérifier.`
+            : result.sheetsSynced
+                ? `Commande ${ORDER_STATUS_LABELS[status].toLocaleLowerCase()} et synchronisée avec Google Sheets.`
+                : `Commande ${ORDER_STATUS_LABELS[status].toLocaleLowerCase()} enregistrée. La synchronisation Google Sheets a échoué ; vérifiez le journal d’activité.`;
+        showMessage('orders-message', successMessage, !result.sheetsSynced);
+        if (isOrderDialogOpen()) {
+            openOrderDialog(orderId);
+            showMessage('order-dialog-message', successMessage, !result.sheetsSynced);
+        }
+        loadOrders().catch(error => {
             console.error('The order status was saved, but the order list could not be refreshed:', error);
-            showMessage('orders-message', `Commande ${ORDER_STATUS_LABELS[status].toLocaleLowerCase()} enregistrée, mais la liste n’a pas pu être actualisée. Cliquez sur « Actualiser ».`, true);
-        }
+            const refreshMessage = `Commande ${ORDER_STATUS_LABELS[status].toLocaleLowerCase()} enregistrée, mais la liste n’a pas pu être actualisée. Cliquez sur « Actualiser ».`;
+            showMessage('orders-message', refreshMessage, true);
+            if (isOrderDialogOpen()) showMessage('order-dialog-message', refreshMessage, true);
+        });
         loadAudit().catch(error => console.error('The order status was saved, but the activity log could not be refreshed:', error));
-        if (activeOrder?.id === orderId && document.getElementById('order-dialog').open) openOrderDialog(orderId);
     } catch (error) {
         showMessage('orders-message', error.message, true);
+        if (isOrderDialogOpen()) showMessage('order-dialog-message', error.message, true);
     } finally {
         if (actionButton?.isConnected) {
             actionButton.disabled = false;

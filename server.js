@@ -156,7 +156,7 @@ function hasPermission(user, permission) {
 }
 
 function writeStore() {
-    saveQueue = saveQueue.then(async () => {
+    const save = saveQueue.then(async () => {
         if (IS_VERCEL) {
             await supabaseRequest('az_store?on_conflict=id', {
                 method: 'POST',
@@ -169,7 +169,8 @@ function writeStore() {
         await fs.writeFile(tempFile, JSON.stringify(store, null, 2), { mode: 0o600 });
         await fs.rename(tempFile, STORE_FILE);
     });
-    return saveQueue;
+    saveQueue = save.then(() => undefined, () => undefined);
+    return save;
 }
 
 async function initializeStore() {
@@ -702,6 +703,9 @@ async function handleApi(req, res, url) {
             if (!order) throw httpError(404, 'Order not found.');
             const statusData = await readJson(req);
             const status = statusData && statusData.status;
+            if (status === order.status && ['confirmed', 'delivered', 'cancelled'].includes(status)) {
+                return sendJson(res, 200, { order, sheetsSynced: Boolean(order.sheetsSynced), alreadyApplied: true });
+            }
             const now = new Date().toISOString();
             if (status === 'confirmed' && order.status === 'pending') {
                 order.status = 'confirmed';
