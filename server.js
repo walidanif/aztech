@@ -18,6 +18,7 @@ const PORT = Number(process.env.PORT || 3000);
 const HOST = process.env.HOST || '127.0.0.1';
 const SESSION_TTL_MS = 12 * 60 * 60 * 1000;
 const PASSWORD_MIN_LENGTH = 12;
+const SEED_CATALOG_VERSION = 1;
 const CATEGORIES = new Set(['telephones', 'laptops', 'accessoires', 'televiseurs', 'electromenagers']);
 const PERMISSIONS = new Set(['products.view', 'products.manage']);
 const sessions = new Map();
@@ -182,10 +183,11 @@ async function initializeStore() {
                 throw new Error('The Supabase az_store row has an invalid format.');
             }
             if (!Array.isArray(store.orders)) store.orders = [];
+            await migrateSeedCatalog();
             if (store.users.length === 0) await bootstrapAdmin();
             return;
         }
-        store = { products: JSON.parse(await fs.readFile(SEED_FILE, 'utf8')), users: [], audit: [], orders: [] };
+        store = { products: JSON.parse(await fs.readFile(SEED_FILE, 'utf8')), users: [], audit: [], orders: [], catalogVersion: SEED_CATALOG_VERSION };
         await bootstrapAdmin();
         return;
     }
@@ -198,14 +200,37 @@ async function initializeStore() {
         }
         if (store.users.length === 0) await bootstrapAdmin();
         if (!Array.isArray(store.orders)) store.orders = [];
+        await migrateSeedCatalog();
         return;
     } catch (error) {
         if (error.code !== 'ENOENT') throw error;
     }
 
     const products = JSON.parse(await fs.readFile(SEED_FILE, 'utf8'));
-    store = { products, users: [], audit: [], orders: [] };
+    store = { products, users: [], audit: [], orders: [], catalogVersion: SEED_CATALOG_VERSION };
     await bootstrapAdmin();
+}
+
+async function migrateSeedCatalog() {
+    if (Number(store.catalogVersion || 0) >= SEED_CATALOG_VERSION) return;
+    const seedProducts = JSON.parse(await fs.readFile(SEED_FILE, 'utf8'));
+    const existingIds = new Set(store.products.map(product => product.id));
+    for (const product of store.products) {
+        const oldPrice = Number(product.oldPrice || 0);
+        const price = Number(product.price);
+        product.discount = oldPrice > price
+            ? Math.round((1 - price / oldPrice) * 100)
+            : 0;
+    }
+    // Add only this new batch so owners' earlier catalog removals stay respected.
+    for (const product of seedProducts) {
+        if (product.id >= 24 && product.id <= 30 && !existingIds.has(product.id)) {
+            store.products.push(product);
+            existingIds.add(product.id);
+        }
+    }
+    store.catalogVersion = SEED_CATALOG_VERSION;
+    await writeStore();
 }
 
 async function bootstrapAdmin() {

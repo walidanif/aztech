@@ -45,7 +45,8 @@
         .nav-link.text-brand-blue { color: #e5091b; border-color: #e5091b; }
         .brand-wordmark { display: inline-flex; align-items: center; gap: .2rem; white-space: nowrap; }
         .brand-wordmark img { height: 2.65rem; width: 3.5rem; object-fit: contain; }
-        .brand-wordmark-copy { display: inline-block; white-space: nowrap; color: #f3f4f6; font-family: 'Arial Black', Inter, sans-serif; font-size: .94rem; font-style: italic; font-weight: 900; letter-spacing: -.045em; line-height: 1; }
+        .brand-wordmark-copy { position: relative; display: inline-block; padding-bottom: .18em; white-space: nowrap; color: #f3f4f6; font-family: 'Arial Black', Inter, sans-serif; font-size: .94rem; font-style: italic; font-weight: 900; letter-spacing: -.045em; line-height: 1; }
+        .brand-wordmark-copy::after { position: absolute; right: 0; bottom: -.02em; left: 0; height: .38em; border-bottom: 3px solid #E5091B; border-radius: 0 0 50% 50%; content: ''; transform: rotate(-3deg); }
         .category-banner-image { transform: scale(1); transition: transform .3s ease; }
         .category-banner:hover .category-banner-image { transform: scale(1.06); }
         .hero-banner { background: radial-gradient(ellipse at 85% 15%, #252529 0%, #101012 54%, #080809 100%); }
@@ -185,13 +186,18 @@
         <!-- ACCUEIL TAB -->
         <div id="tab-accueil" class="tab-content block">
             <!-- Hero Banner -->
-            <div class="hero-banner mb-10 rounded-2xl bg-brand-blue px-6 py-10 text-white shadow-lg md:px-12 md:py-14">
-                <p class="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-brand-silver">Technologie pour tous</p>
-                <h2 class="max-w-3xl text-3xl font-bold leading-tight md:text-5xl" data-i18n="heroTitle">أفضل الأجهزة بأفضل الأسعار</h2>
-                <p class="mt-4 max-w-2xl text-base text-white/80 md:text-lg" data-i18n="heroDescription">هواتف وحواسيب وتلفزيونات وإكسسوارات. اختر المنتج وأرسل طلبك في خطوات بسيطة.</p>
-                <div class="mt-8 flex flex-wrap items-center gap-4">
-                    <button onclick="switchTab('catalogue')" class="rounded-md bg-brand-orange px-6 py-3 font-bold text-white transition hover:brightness-95" data-i18n="browseProducts">Découvrir les produits</button>
-                    <span class="text-sm text-white/75" data-i18n="shipping">توصيل لجميع أنحاء المغرب</span>
+            <div class="hero-banner mb-10 overflow-hidden rounded-2xl bg-brand-blue px-6 py-8 text-white shadow-lg md:px-12 md:py-10">
+                <div>
+                    <div class="relative z-10">
+                        <p class="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-brand-silver">AZ TECH · Technologie pour tous</p>
+                        <h2 class="max-w-3xl text-3xl font-bold leading-tight md:text-5xl">Le smartphone qu’il vous faut, au prix juste.</h2>
+                        <p class="mt-4 max-w-2xl text-base text-white/80 md:text-lg">Apple, Samsung, Xiaomi et bien plus. Découvrez notre sélection de téléphones et commandez simplement partout au Maroc.</p>
+                        <div class="mt-7 flex flex-wrap items-center gap-3">
+                            <button onclick="switchTab('telephones')" class="rounded-md bg-brand-orange px-6 py-3 font-bold text-white transition hover:brightness-95">Découvrir les téléphones</button>
+                            <button onclick="switchTab('catalogue')" class="rounded-md border border-white/25 px-6 py-3 font-bold text-white transition hover:bg-white/10">Tout le catalogue</button>
+                        </div>
+                        <p class="mt-4 text-sm text-white/65">Livraison partout au Maroc · Confirmation avant expédition</p>
+                    </div>
                 </div>
             </div>
 
@@ -388,7 +394,7 @@
     <div id="product-detail-modal" class="fixed inset-0 z-[90] hidden items-center justify-center bg-black/60 p-4" aria-hidden="true">
         <section class="relative grid w-full max-w-3xl max-h-[92vh] gap-4 sm:gap-6 overflow-y-auto rounded-2xl bg-white p-4 sm:p-6 shadow-2xl md:grid-cols-2 md:p-8" role="dialog" aria-modal="true" aria-labelledby="detail-title">
             <button type="button" onclick="closeProductDetails()" class="modal-close absolute right-4 top-4 rounded-md px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100" aria-label="إغلاق" data-i18n="close">إغلاق</button>
-            <img id="detail-image" src="" alt="" class="mt-8 aspect-square w-full rounded-xl bg-gray-50 object-cover md:mt-0">
+            <img id="detail-image" alt="" class="mt-8 aspect-square w-full rounded-xl bg-gray-50 object-cover md:mt-0">
             <div class="flex flex-col justify-center pt-8 md:pt-0">
                 <p id="detail-brand" class="mb-2 text-sm font-semibold uppercase tracking-wide text-gray-500"></p>
                 <h2 id="detail-title" class="mb-3 pr-16 text-2xl font-bold text-brand-blue md:pr-0"></h2>
@@ -446,15 +452,15 @@
         // --- Mock Data ---
         const products = [
             // Phones
-            { id: 1, title: 'iPhone 15 Pro Max', brand: 'Apple', category: 'telephones', oldPrice: 15000, price: 13999, discount: 6, img: 'assets/products/iphone-15-pro-max.jpg' },
+            { id: 1, title: 'iPhone 15 Pro Max', brand: 'Apple', category: 'telephones', oldPrice: 15000, price: 13999, discount: 7, img: 'assets/products/iphone-15-pro-max.jpg' },
             { id: 2, title: 'Redmi Note 13 Pro', brand: 'Xiaomi', category: 'telephones', oldPrice: 3500, price: 2999, discount: 14, img: 'assets/products/redmi-note-13-pro.jpg' },
             { id: 3, title: 'Galaxy S24 Ultra', brand: 'Samsung', category: 'telephones', oldPrice: 14500, price: 12900, discount: 11, img: 'assets/products/galaxy-s24-ultra.jpg' },
-            { id: 4, title: 'Oppo Reno 11', brand: 'Oppo', category: 'telephones', oldPrice: 4800, price: 4200, discount: 12, img: 'assets/products/oppo-reno-11.jpg' },
+            { id: 4, title: 'Oppo Reno 11', brand: 'Oppo', category: 'telephones', oldPrice: 4800, price: 4200, discount: 13, img: 'assets/products/oppo-reno-11.jpg' },
             // Laptops
-            { id: 5, title: 'EliteBook 840 G8', brand: 'HP', category: 'laptops', oldPrice: 12000, price: 9500, discount: 20, img: 'assets/products/hp-elitebook-840-g8.png' },
-            { id: 6, title: 'MacBook Air M2', brand: 'Apple', category: 'laptops', oldPrice: 13500, price: 11900, discount: 11, img: 'assets/products/macbook-air-m2.jpg' },
+            { id: 5, title: 'EliteBook 840 G8', brand: 'HP', category: 'laptops', oldPrice: 12000, price: 9500, discount: 21, img: 'assets/products/hp-elitebook-840-g8.png' },
+            { id: 6, title: 'MacBook Air M2', brand: 'Apple', category: 'laptops', oldPrice: 13500, price: 11900, discount: 12, img: 'assets/products/macbook-air-m2.jpg' },
             { id: 7, title: 'ThinkPad T14', brand: 'Lenovo', category: 'laptops', oldPrice: 11000, price: 8900, discount: 19, img: 'assets/products/thinkpad-t14.jpeg' },
-            { id: 8, title: 'Surface Laptop 5', brand: 'Microsoft', category: 'laptops', oldPrice: 14000, price: 12500, discount: 10, img: 'assets/products/surface-laptop-5.jpg' },
+            { id: 8, title: 'Surface Laptop 5', brand: 'Microsoft', category: 'laptops', oldPrice: 14000, price: 12500, discount: 11, img: 'assets/products/surface-laptop-5.jpg' },
             // Appliances
             { id: 9, title: 'Machine à Café Magnifica', brand: 'DeLonghi', category: 'electromenagers', oldPrice: 5000, price: 4200, discount: 16, img: 'assets/products/delonghi-magnifica.jpg' },
             { id: 10, title: 'Airfryer XXL', brand: 'Philips', category: 'electromenagers', oldPrice: 2500, price: 1899, discount: 24, img: 'assets/products/philips-airfryer-xxl.jpg' },
@@ -472,6 +478,13 @@
             { id: 21, title: 'Samsung Crystal UHD 55 pouces', brand: 'Samsung', category: 'televiseurs', oldPrice: 7299, price: 6499, discount: 11, description: 'Téléviseur Samsung Crystal UHD de 55 pouces.', img: 'assets/products/samsung-crystal-uhd-55.png' },
             { id: 22, title: 'TCL QLED 55 pouces', brand: 'TCL', category: 'televiseurs', oldPrice: 6499, price: 5799, discount: 11, description: 'Téléviseur TCL QLED de 55 pouces.', img: 'https://electroexpert.ma/cdn/shop/files/IMG-0717.jpg?v=1775179072' },
             { id: 23, title: 'LG UHD 50 pouces', brand: 'LG', category: 'televiseurs', oldPrice: 5999, price: 5499, discount: 8, description: 'Téléviseur LG UHD de 50 pouces.', img: 'assets/products/lg-uhd-50.jpg' },
+            { id: 24, title: 'Samsung Galaxy A35 5G', brand: 'Samsung', category: 'telephones', oldPrice: 3499, price: 3199, discount: 9, description: 'Smartphone 5G avec écran Super AMOLED 6,6 pouces et appareil photo 50 Mpx.', img: 'assets/products/galaxy-a35-5g.svg' },
+            { id: 25, title: 'Redmi Note 14 Pro 5G', brand: 'Xiaomi', category: 'telephones', oldPrice: 4299, price: 3899, discount: 9, description: 'Smartphone 5G avec écran AMOLED 120 Hz, appareil photo 200 Mpx et charge rapide.', img: 'assets/products/redmi-note-14-pro-5g.svg' },
+            { id: 26, title: 'iPhone 15 128 Go', brand: 'Apple', category: 'telephones', oldPrice: 9999, price: 8999, discount: 10, description: 'iPhone 15 avec écran Super Retina XDR, puce A16 et stockage 128 Go.', img: 'assets/products/iphone-15.svg' },
+            { id: 27, title: 'Google Pixel 8a 128 Go', brand: 'Google', category: 'telephones', oldPrice: 6799, price: 6199, discount: 9, description: 'Smartphone Google Pixel 8a avec photo intelligente, écran OLED et 128 Go.', img: 'assets/products/pixel-8a.svg' },
+            { id: 28, title: 'OnePlus Nord CE4 Lite 5G', brand: 'OnePlus', category: 'telephones', oldPrice: 3299, price: 2999, discount: 9, description: 'Smartphone 5G avec écran AMOLED 120 Hz et batterie longue durée.', img: 'assets/products/oneplus-nord-ce4-lite.svg' },
+            { id: 29, title: 'realme 12 Pro 5G', brand: 'realme', category: 'telephones', oldPrice: 3999, price: 3599, discount: 10, description: 'Smartphone 5G avec écran incurvé, zoom portrait et finition élégante.', img: 'assets/products/realme-12-pro.svg' },
+            { id: 30, title: 'HONOR X9b 5G', brand: 'HONOR', category: 'telephones', oldPrice: 4699, price: 4199, discount: 11, description: 'Smartphone 5G avec écran AMOLED incurvé et batterie 5800 mAh.', img: 'assets/products/honor-x9b.svg' },
         ];
 
         // Paste the deployed Google Apps Script web app URL here to receive orders in Sheets.

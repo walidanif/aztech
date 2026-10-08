@@ -20,6 +20,8 @@ Ouvrir ensuite :
 
 À la première ouverture, le catalogue de démonstration est copié depuis `data/products.json` vers `data/store.json`. Le fichier de données et les comptes sont exclus de Git. Conserver une sauvegarde privée de `data/store.json` avant toute migration ou restauration.
 
+Le catalogue de démonstration contient 30 articles, dont une sélection élargie de téléphones. Une mise à niveau versionnée ajoute les nouveaux articles au magasin local ou Supabase déjà initialisé sans remplacer les produits personnalisés, les comptes, les commandes ou l’historique ; elle recalcule aussi les pourcentages de réduction à partir des prix enregistrés. Les prix et la disponibilité sont indicatifs : les confirmer avec l’équipe avant publication commerciale.
+
 Le serveur écoute uniquement sur `127.0.0.1` par défaut. En production, le placer derrière un proxy TLS qui transmet le trafic au port interne et définir `COOKIE_SECURE=true`. Si le serveur tourne dans un conteneur, définir `HOST=0.0.0.0` uniquement dans son réseau privé, filtrer le port au pare-feu et ne jamais exposer ce port HTTP directement au public. Fournir l’administrateur initial et son mot de passe via un gestionnaire de secrets ou des variables d’environnement gérées par l’hébergeur — jamais dans un fichier public, un dépôt Git ou du code côté navigateur.
 
 Cette première installation est conçue pour un seul processus Node : le catalogue est écrit de manière atomique sur disque et les sessions sont invalidées au redémarrage. Pour plusieurs instances ou une disponibilité sans interruption, connecter une base de données transactionnelle et un magasin de sessions partagé avant de répartir le trafic.

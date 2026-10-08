@@ -14,8 +14,8 @@ const ORDER_HEADERS = [
   'Annulée par', 'Dernière modification'
 ];
 
-// Keep these IDs and prices in sync with the products array in the HTML file.
-// IDs 13-23 were added as sample listings; confirm their prices against real stock.
+// Keep these IDs and prices in sync with the product catalog.
+// IDs 13-30 are sample listings; confirm their prices against real stock.
 const ORDER_CATALOG = {
   1: { title: 'iPhone 15 Pro Max', price: 13999 },
   2: { title: 'Redmi Note 13 Pro', price: 2999 },
@@ -39,7 +39,14 @@ const ORDER_CATALOG = {
   20: { title: 'Montre connectée X8', price: 399 },
   21: { title: 'Samsung Crystal UHD 55 pouces', price: 6499 },
   22: { title: 'TCL QLED 55 pouces', price: 5799 },
-  23: { title: 'LG UHD 50 pouces', price: 5499 }
+  23: { title: 'LG UHD 50 pouces', price: 5499 },
+  24: { title: 'Samsung Galaxy A35 5G', price: 3199 },
+  25: { title: 'Redmi Note 14 Pro 5G', price: 3899 },
+  26: { title: 'iPhone 15 128 Go', price: 8999 },
+  27: { title: 'Google Pixel 8a 128 Go', price: 6199 },
+  28: { title: 'OnePlus Nord CE4 Lite 5G', price: 2999 },
+  29: { title: 'realme 12 Pro 5G', price: 3599 },
+  30: { title: 'HONOR X9b 5G', price: 4199 }
 };
 
 function doGet() {

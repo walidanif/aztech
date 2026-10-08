@@ -93,6 +93,10 @@ function escapeHtml(value) {
     })[character]);
 }
 
+function productImageUrl(image) {
+    return /^https?:\/\//i.test(image) ? image : `/${String(image).replace(/^\/+/, '')}`;
+}
+
 function showLogin() {
     if (ordersPollTimer) clearInterval(ordersPollTimer);
     ordersPollTimer = null;
@@ -515,7 +519,7 @@ function renderProducts() {
         <tr>
             <td class="px-4 py-3">
                 <div class="flex items-center gap-3">
-                    <img src="${escapeHtml(product.img)}" alt="" class="h-12 w-12 rounded-lg bg-gray-100 object-contain" loading="lazy">
+                    <img src="${escapeHtml(productImageUrl(product.img))}" alt="" class="h-12 w-12 rounded-lg bg-gray-100 object-contain" loading="lazy">
                     <div><p class="font-semibold text-brand-blue">${escapeHtml(product.title)}</p><p class="text-xs text-gray-500">${escapeHtml(product.brand)}</p></div>
                 </div>
             </td>
@@ -558,7 +562,7 @@ function openProductDialog(productId = null) {
         ? 'Image actuelle conservée si aucune nouvelle photo n’est choisie.'
         : 'Ajoutez une photo depuis votre appareil.';
     const preview = document.getElementById('product-image-preview');
-    preview.src = product?.img || '';
+    preview.src = product ? productImageUrl(product.img) : '';
     preview.classList.toggle('hidden', !product?.img);
     document.getElementById('product-dialog').showModal();
 }
