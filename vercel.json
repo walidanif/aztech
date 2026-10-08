@@ -9,8 +9,16 @@
   },
   "rewrites": [
     {
-      "source": "/api/admin/:resource/:id",
-      "destination": "/api/admin-resource?resource=:resource&id=:id"
+      "source": "/api/admin/products/:id",
+      "destination": "/api/admin-resource?resource=products&id=:id"
+    },
+    {
+      "source": "/api/admin/users/:id",
+      "destination": "/api/admin-resource?resource=users&id=:id"
+    },
+    {
+      "source": "/api/admin/uploads/:id",
+      "destination": "/api/admin-resource?resource=uploads&id=:id"
     },
     {
       "source": "/admin",
