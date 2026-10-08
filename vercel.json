@@ -5,6 +5,12 @@
     },
     "api/admin/[...path].js": {
       "includeFiles": "data/products.json"
+    },
+    "api/admin/orders/[id].js": {
+      "includeFiles": "data/products.json"
+    },
+    "api/admin/orders/[id]/status.js": {
+      "includeFiles": "data/products.json"
     }
   },
   "rewrites": [
