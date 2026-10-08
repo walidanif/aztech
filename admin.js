@@ -197,18 +197,42 @@ async function loadDashboard() {
     const canViewProducts = currentUser.role === 'admin'
         || currentUser.permissions.includes('products.view')
         || currentUser.permissions.includes('products.manage');
-    const [catalog, accountList] = await Promise.all([
+    const [catalogResult, usersResult] = await Promise.allSettled([
         canViewProducts ? api('/api/products') : Promise.resolve(null),
         currentUser.role === 'admin' ? api('/api/admin/users') : Promise.resolve(null)
     ]);
-    if (catalog) {
-        products = catalog;
+    if (catalogResult.status === 'fulfilled' && catalogResult.value) {
+        products = catalogResult.value;
         renderProducts();
+    } else if (catalogResult.status === 'rejected') {
+        showMessage('products-message', `Impossible de charger le catalogue enregistré : ${catalogResult.reason.message}`, true);
     }
     if (currentUser.role === 'admin') {
-        users = accountList;
-        renderUsers();
-        await Promise.all([loadAudit(), loadOrders()]);
+        if (usersResult.status === 'fulfilled') {
+            users = usersResult.value;
+            renderUsers();
+        } else {
+            showMessage('users-message', `Impossible de charger les comptes : ${usersResult.reason.message}`, true);
+        }
+        const [auditResult, ordersResult] = await Promise.allSettled([loadAudit(), loadOrders()]);
+        if (auditResult.status === 'rejected') console.error('Could not load activity:', auditResult.reason);
+        if (ordersResult.status === 'rejected') showMessage('orders-message', ordersResult.reason.message, true);
+    }
+}
+
+async function refreshProducts() {
+    const button = document.getElementById('products-refresh-button');
+    button.disabled = true;
+    try {
+        const catalog = await api('/api/products');
+        if (!Array.isArray(catalog)) throw new Error('La réponse du catalogue est invalide.');
+        products = catalog;
+        renderProducts();
+        showMessage('products-message', `${products.length} article${products.length === 1 ? '' : 's'} chargé${products.length === 1 ? '' : 's'} depuis le catalogue enregistré.`);
+    } catch (error) {
+        showMessage('products-message', `Impossible d’actualiser le catalogue enregistré : ${error.message}`, true);
+    } finally {
+        button.disabled = false;
     }
 }
 
@@ -485,6 +509,7 @@ function renderProducts() {
     document.getElementById('stat-products').textContent = products.length;
     document.getElementById('stat-promotions').textContent = products.filter(product => product.discount > 0).length;
     document.getElementById('stat-users').textContent = users.filter(user => user.isActive).length || (currentUser.role === 'admin' ? 0 : '—');
+    document.getElementById('product-count-label').textContent = `${filtered.length} sur ${products.length} article${products.length === 1 ? '' : 's'} enregistré${products.length === 1 ? '' : 's'}`;
     document.getElementById('products-empty').classList.toggle('hidden', filtered.length > 0);
     document.getElementById('products-table-body').innerHTML = filtered.map(product => `
         <tr>
@@ -597,12 +622,16 @@ async function saveProduct(event) {
             method: id ? 'PUT' : 'POST',
             body: JSON.stringify(product)
         });
+        if (!result.product || (id && result.product.id !== Number(id))) {
+            throw new Error('Le serveur n’a pas confirmé l’enregistrement du produit.');
+        }
         if (id) products = products.map(item => item.id === Number(id) ? result.product : item);
         else products.push(result.product);
         notifyCatalogUpdated();
         document.getElementById('product-dialog').close();
         renderProducts();
-        showMessage('products-message', 'Article enregistré avec succès.');
+        showMessage('products-message', 'Article enregistré dans le catalogue et publié sur le site.');
+        refreshProducts().catch(error => console.error('The product was saved, but the catalogue refresh failed:', error));
     } catch (error) {
         showMessage('product-form-error', error.message, true);
         document.getElementById('product-form-error').classList.remove('hidden');
@@ -615,11 +644,13 @@ async function deleteProduct(productId) {
     const product = products.find(item => item.id === productId);
     if (!product || !window.confirm(`Supprimer « ${product.title} » du catalogue ?`)) return;
     try {
-        await api(`/api/admin/products/${productId}`, { method: 'DELETE' });
+        const result = await api(`/api/admin/products/${productId}`, { method: 'DELETE' });
+        if (!result.ok) throw new Error('Le serveur n’a pas confirmé la suppression du produit.');
         products = products.filter(item => item.id !== productId);
         notifyCatalogUpdated();
         renderProducts();
-        showMessage('products-message', 'Article supprimé du catalogue.');
+        showMessage('products-message', 'Article supprimé du catalogue enregistré et du site.');
+        refreshProducts().catch(error => console.error('The product was deleted, but the catalogue refresh failed:', error));
     } catch (error) {
         showMessage('products-message', error.message, true);
     }
@@ -832,6 +863,7 @@ document.querySelector('#product-form [name="imageFile"]').addEventListener('cha
 });
 document.getElementById('new-user-role').addEventListener('change', syncUserPermissionVisibility);
 document.getElementById('product-search').addEventListener('input', renderProducts);
+document.getElementById('products-refresh-button').addEventListener('click', refreshProducts);
 document.getElementById('orders-search').addEventListener('input', () => renderOrders());
 document.getElementById('orders-filter-status').addEventListener('change', () => renderOrders());
 document.getElementById('orders-filter-from').addEventListener('change', () => renderOrders());

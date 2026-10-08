@@ -188,9 +188,15 @@
                         <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400" aria-hidden="true"></i>
                         <input id="product-search" type="search" placeholder="Rechercher un article..." class="w-full rounded-lg border border-gray-300 py-2.5 pl-9 pr-3 text-sm focus:border-brand-orange focus:outline-none focus:ring-2 focus:ring-red-100">
                     </label>
-                    <button id="add-product-button" type="button" class="hidden w-fit items-center gap-2 rounded-lg bg-brand-orange px-4 py-2.5 text-sm font-bold text-white transition hover:brightness-95">
-                        <i class="fa-solid fa-plus" aria-hidden="true"></i> Ajouter un article
-                    </button>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <p id="product-count-label" class="text-xs text-gray-500" aria-live="polite"></p>
+                        <button id="products-refresh-button" type="button" class="w-fit rounded-lg border border-gray-300 px-3 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-50">
+                            <i class="fa-solid fa-rotate-right mr-1" aria-hidden="true"></i> Actualiser
+                        </button>
+                        <button id="add-product-button" type="button" class="hidden w-fit items-center gap-2 rounded-lg bg-brand-orange px-4 py-2.5 text-sm font-bold text-white transition hover:brightness-95">
+                            <i class="fa-solid fa-plus" aria-hidden="true"></i> Ajouter un article
+                        </button>
+                    </div>
                 </div>
                 <div id="products-message" class="hidden rounded-lg p-3 text-sm" role="status" aria-live="polite"></div>
                 <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
