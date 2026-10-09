@@ -35,6 +35,7 @@ let orderUnreadCount = 0;
 let ordersSheetsConfigured = false;
 let previewObjectUrls = [];
 let productImagePaths = [];
+let productImageFiles = [];
 let activeOrder = null;
 let ordersPollTimer = null;
 let orderItemsDraft = [];
@@ -556,6 +557,7 @@ function renderProducts() {
 function openProductDialog(productId = null) {
     const form = document.getElementById('product-form');
     clearProductImagePreviews();
+    productImageFiles = [];
     form.reset();
     hideMessage('product-form-error');
     const product = productId ? products.find(item => item.id === productId) : null;
@@ -583,14 +585,14 @@ function clearProductImagePreviews() {
     previewObjectUrls = [];
 }
 
-function renderProductImagePreviews(selectedFiles = []) {
+function renderProductImagePreviews() {
     clearProductImagePreviews();
     const previews = document.getElementById('product-image-previews');
     const images = productImagePaths.map((image, index) => ({
         src: productImageUrl(image),
         alt: `Photo actuelle ${index + 1}`
     }));
-    selectedFiles.forEach((file, index) => {
+    productImageFiles.forEach((file, index) => {
         const url = URL.createObjectURL(file);
         previewObjectUrls.push(url);
         images.push({ src: url, alt: `Nouvelle photo ${index + 1}` });
@@ -613,7 +615,7 @@ async function saveProduct(event) {
     event.preventDefault();
     const form = event.currentTarget;
     const id = form.elements.id.value;
-    const imageFiles = Array.from(form.elements.imageFiles.files);
+    const imageFiles = [...productImageFiles];
     const product = {
         title: form.elements.title.value.trim(),
         brand: form.elements.brand.value.trim(),
@@ -897,17 +899,18 @@ document.getElementById('add-product-button').addEventListener('click', () => op
 document.getElementById('product-dialog-close').addEventListener('click', () => document.getElementById('product-dialog').close());
 document.querySelector('#product-form [name="imageFiles"]').addEventListener('change', event => {
     const files = Array.from(event.currentTarget.files);
-    if (productImagePaths.length + files.length > 10) {
-        event.currentTarget.value = '';
+    event.currentTarget.value = '';
+    if (productImagePaths.length + productImageFiles.length + files.length > 10) {
         showMessage('product-form-error', 'Un article peut contenir jusqu’à 10 photos.', true);
         renderProductImagePreviews();
         return;
     }
+    productImageFiles.push(...files);
     hideMessage('product-form-error');
     document.getElementById('product-image-name').textContent = files.length
-        ? `${files.length} nouvelle(s) photo(s) sélectionnée(s).`
+        ? `${productImageFiles.length} nouvelle(s) photo(s) sélectionnée(s).`
         : 'Les photos actuelles sont conservées.';
-    renderProductImagePreviews(files);
+    renderProductImagePreviews();
 });
 document.getElementById('new-user-role').addEventListener('change', syncUserPermissionVisibility);
 document.getElementById('product-search').addEventListener('input', renderProducts);
