@@ -117,7 +117,21 @@ async function createSupabaseImageUpload(filename) {
     const uploadUrl = /^https?:\/\//i.test(signedPath)
         ? signedPath
         : `${url}/storage/v1${signedPath.startsWith('/') ? signedPath : `/${signedPath}`}`;
-    return { uploadUrl, img: `uploads/${filename}` };
+    return { uploadUrl, img: `${url}/storage/v1/object/public/product-images/${filename}` };
+}
+
+function publicProduct(product) {
+    if (!IS_VERCEL) return product;
+    const { url } = supabaseConfig();
+    const publicImage = image => {
+        const match = String(image || '').match(/^uploads\/([0-9a-f-]{36}\.(?:png|jpg|webp|gif))$/i);
+        return match ? `${url}/storage/v1/object/public/product-images/${match[1]}` : image;
+    };
+    return {
+        ...product,
+        img: publicImage(product.img),
+        ...(Array.isArray(product.images) ? { images: product.images.map(publicImage) } : {})
+    };
 }
 
 function normalizedUsername(value) {
@@ -636,7 +650,7 @@ async function handleApi(req, res, url) {
     }
 
     if (req.method === 'GET' && url.pathname === '/api/products') {
-        return sendJson(res, 200, store.products);
+        return sendJson(res, 200, store.products.map(publicProduct));
     }
 
     if (req.method === 'POST' && url.pathname === '/api/admin/login') {
