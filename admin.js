@@ -590,16 +590,33 @@ function renderProductImagePreviews() {
     const previews = document.getElementById('product-image-previews');
     const images = productImagePaths.map((image, index) => ({
         src: productImageUrl(image),
-        alt: `Photo actuelle ${index + 1}`
+        alt: `Photo actuelle ${index + 1}`,
+        kind: 'saved',
+        index
     }));
     productImageFiles.forEach((file, index) => {
         const url = URL.createObjectURL(file);
         previewObjectUrls.push(url);
-        images.push({ src: url, alt: `Nouvelle photo ${index + 1}` });
+        images.push({ src: url, alt: `Nouvelle photo ${index + 1}`, kind: 'new', index });
     });
     previews.innerHTML = images.map(image => `
-        <img src="${escapeHtml(image.src)}" alt="${escapeHtml(image.alt)}" class="h-24 w-full rounded-lg border border-gray-200 bg-white object-contain p-1">
+        <div class="relative">
+            <img src="${escapeHtml(image.src)}" alt="${escapeHtml(image.alt)}" class="h-24 w-full rounded-lg border border-gray-200 bg-white object-contain p-1">
+            <button type="button" data-remove-image-kind="${image.kind}" data-remove-image-index="${image.index}" class="absolute right-1 top-1 flex h-7 w-7 items-center justify-center rounded-full bg-red-600 text-sm font-bold text-white shadow transition hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-300" aria-label="Supprimer ${escapeHtml(image.alt)}">×</button>
+        </div>
     `).join('');
+}
+
+function removeProductImage(kind, index) {
+    if (kind === 'saved') productImagePaths.splice(index, 1);
+    else if (kind === 'new') productImageFiles.splice(index, 1);
+    else return;
+    const input = document.querySelector('#product-form [name="imageFiles"]');
+    input.value = '';
+    document.getElementById('product-image-name').textContent = productImagePaths.length + productImageFiles.length
+        ? `${productImagePaths.length + productImageFiles.length} photo(s) dans la galerie.`
+        : 'Ajoutez au moins une photo depuis votre appareil.';
+    renderProductImagePreviews();
 }
 
 function readImageDataUrl(file) {
@@ -911,6 +928,11 @@ document.querySelector('#product-form [name="imageFiles"]').addEventListener('ch
         ? `${productImageFiles.length} nouvelle(s) photo(s) sélectionnée(s).`
         : 'Les photos actuelles sont conservées.';
     renderProductImagePreviews();
+});
+document.getElementById('product-image-previews').addEventListener('click', event => {
+    const button = event.target.closest('[data-remove-image-kind]');
+    if (!button) return;
+    removeProductImage(button.dataset.removeImageKind, Number(button.dataset.removeImageIndex));
 });
 document.getElementById('new-user-role').addEventListener('change', syncUserPermissionVisibility);
 document.getElementById('product-search').addEventListener('input', renderProducts);
