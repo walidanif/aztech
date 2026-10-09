@@ -11,6 +11,9 @@
     },
     "api/admin/orders/[id]/status.js": {
       "includeFiles": "data/products.json"
+    },
+    "api/uploads/[filename].js": {
+      "includeFiles": "data/products.json"
     }
   },
   "rewrites": [
@@ -35,8 +38,8 @@
       "destination": "/admin.html"
     },
     {
-      "source": "/uploads/:path*",
-      "destination": "/api/uploads/:path*"
+      "source": "/uploads/:filename",
+      "destination": "/api/uploads/:filename"
     }
   ]
 }

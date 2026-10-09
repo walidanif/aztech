@@ -394,7 +394,14 @@
     <div id="product-detail-modal" class="fixed inset-0 z-[90] hidden items-center justify-center bg-black/60 p-4" aria-hidden="true">
         <section class="relative grid w-full max-w-3xl max-h-[92vh] gap-4 sm:gap-6 overflow-y-auto rounded-2xl bg-white p-4 sm:p-6 shadow-2xl md:grid-cols-2 md:p-8" role="dialog" aria-modal="true" aria-labelledby="detail-title">
             <button type="button" onclick="closeProductDetails()" class="modal-close absolute right-4 top-4 rounded-md px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100" aria-label="إغلاق" data-i18n="close">إغلاق</button>
-            <img id="detail-image" alt="" class="mt-8 aspect-square w-full rounded-xl bg-gray-50 object-cover md:mt-0">
+            <div class="mt-8 min-w-0 md:mt-0">
+                <div class="relative">
+                    <img id="detail-image" alt="" class="aspect-square w-full rounded-xl bg-gray-50 object-contain">
+                    <button id="detail-image-previous" type="button" class="absolute left-2 top-1/2 hidden -translate-y-1/2 rounded-full bg-white/90 px-3 py-2 text-lg font-bold text-brand-blue shadow" aria-label="Photo précédente">‹</button>
+                    <button id="detail-image-next" type="button" class="absolute right-2 top-1/2 hidden -translate-y-1/2 rounded-full bg-white/90 px-3 py-2 text-lg font-bold text-brand-blue shadow" aria-label="Photo suivante">›</button>
+                </div>
+                <div id="detail-image-thumbnails" class="mt-3 flex gap-2 overflow-x-auto" aria-label="Photos de l’article"></div>
+            </div>
             <div class="flex flex-col justify-center pt-8 md:pt-0">
                 <p id="detail-brand" class="mb-2 text-sm font-semibold uppercase tracking-wide text-gray-500"></p>
                 <h2 id="detail-title" class="mb-3 pr-16 text-2xl font-bold text-brand-blue md:pr-0"></h2>
@@ -490,6 +497,8 @@
         // Paste the deployed Google Apps Script web app URL here to receive orders in Sheets.
         const WHATSAPP_NUMBER = '212652517115';
         let selectedProduct = null;
+        let detailImages = [];
+        let detailImageIndex = 0;
         let selectedReviewRating = 0;
         const cart = new Map();
         let checkoutItems = [];
@@ -640,6 +649,10 @@
                 || t('genericDescription').replace('{brand}', product.brand);
         }
 
+        function productImageUrl(image) {
+            return /^https?:\/\//i.test(image) ? image : `/${String(image).replace(/^\/+/, '')}`;
+        }
+
         function applyLanguage() {
             document.documentElement.lang = 'fr';
             document.documentElement.dir = 'ltr';
@@ -721,7 +734,11 @@
         function openProductDetails(productId) {
             const product = products.find(item => item.id === productId);
             if (!product) return;
-            document.getElementById('detail-image').src = product.img;
+            detailImages = Array.isArray(product.images) && product.images.length
+                ? product.images
+                : (product.img ? [product.img] : []);
+            detailImageIndex = 0;
+            renderProductDetailImages();
             document.getElementById('detail-image').alt = product.title;
             document.getElementById('detail-brand').textContent = product.brand;
             document.getElementById('detail-title').textContent = product.title;
@@ -734,6 +751,28 @@
             modal.classList.add('flex');
             modal.setAttribute('aria-hidden', 'false');
             document.body.classList.add('overflow-hidden');
+        }
+
+        function renderProductDetailImages() {
+            const image = document.getElementById('detail-image');
+            image.src = detailImages.length ? productImageUrl(detailImages[detailImageIndex]) : '';
+            const thumbnails = document.getElementById('detail-image-thumbnails');
+            thumbnails.innerHTML = detailImages.length > 1
+                ? detailImages.map((source, index) => `
+                    <button type="button" data-detail-image-index="${index}" class="shrink-0 rounded-lg border-2 ${index === detailImageIndex ? 'border-brand-orange' : 'border-gray-200'} p-1" aria-label="Afficher la photo ${index + 1}" aria-pressed="${index === detailImageIndex}">
+                        <img src="${escapeHtml(productImageUrl(source))}" alt="" class="h-14 w-14 rounded object-contain">
+                    </button>
+                `).join('')
+                : '';
+            document.getElementById('detail-image-previous').classList.toggle('hidden', detailImages.length < 2);
+            document.getElementById('detail-image-next').classList.toggle('hidden', detailImages.length < 2);
+        }
+
+        function moveProductDetailImage(direction) {
+            if (detailImages.length < 2) return;
+            detailImageIndex = (detailImageIndex + direction + detailImages.length) % detailImages.length;
+            const product = products.find(item => item.id === Number(document.getElementById('detail-order-button').dataset.productId));
+            if (product) renderProductDetailImages();
         }
 
         function closeProductDetails() {
@@ -777,7 +816,7 @@
             document.getElementById('cart-items').innerHTML = items.length
                 ? items.map(({ product, quantity }) => `
                     <article class="flex gap-3 rounded-xl border border-gray-200 p-3">
-                        <img src="${escapeHtml(product.img)}" alt="" class="h-16 w-16 shrink-0 rounded-lg bg-gray-50 object-contain">
+                        <img src="${escapeHtml(productImageUrl(product.img))}" alt="" class="h-16 w-16 shrink-0 rounded-lg bg-gray-50 object-contain">
                         <div class="min-w-0 flex-1">
                             <h3 class="line-clamp-2 text-sm font-semibold text-brand-blue">${escapeHtml(product.title)}</h3>
                             <p class="mt-1 text-sm font-bold text-brand-orange">${formatPrice(product.price)}</p>
@@ -1014,7 +1053,7 @@
                 if (!response.ok) {
                     const message = result.errorCode === 'SHEETS_ACCESS_DENIED'
                         ? t('messages').sheetsAccess
-                        : t('messages').failed;
+                        : (typeof result.error === 'string' ? result.error : t('messages').failed);
                     showCheckoutMessage(message, true);
                     return;
                 }
@@ -1046,7 +1085,7 @@
                     ${product.discount ? `<span class="mb-3 w-fit rounded bg-brand-orange px-2 py-1 text-xs font-bold text-white">-${product.discount}%</span>` : '<span class="mb-3 h-6"></span>'}
                     <button type="button" onclick="openProductDetails(${product.id})" class="block w-full text-start">
                         <div class="mb-4 aspect-square overflow-hidden rounded-lg bg-gray-50">
-                            <img src="${escapeHtml(product.img)}" alt="${escapeHtml(product.title)}" loading="lazy" class="h-full w-full object-contain transition duration-300 hover:scale-[1.03]">
+                            <img src="${escapeHtml(productImageUrl(product.img))}" alt="${escapeHtml(product.title)}" loading="lazy" class="h-full w-full object-contain transition duration-300 hover:scale-[1.03]">
                         </div>
                         <span class="text-xs font-semibold uppercase tracking-wide text-gray-500">${escapeHtml(product.brand)}</span>
                         <h3 class="mt-1 min-h-12 font-semibold leading-snug text-brand-blue">${escapeHtml(product.title)}</h3>
@@ -1223,6 +1262,17 @@
                 const productId = Number(event.currentTarget.dataset.productId);
                 closeProductDetails();
                 addToCart(productId);
+            });
+            document.getElementById('detail-image-previous').addEventListener('click', () => moveProductDetailImage(-1));
+            document.getElementById('detail-image-next').addEventListener('click', () => moveProductDetailImage(1));
+            document.getElementById('detail-image-thumbnails').addEventListener('click', event => {
+                const button = event.target.closest('[data-detail-image-index]');
+                if (!button) return;
+                const index = Number(button.dataset.detailImageIndex);
+                if (!Number.isInteger(index) || index < 0 || index >= detailImages.length) return;
+                detailImageIndex = index;
+                const product = products.find(item => item.id === Number(document.getElementById('detail-order-button').dataset.productId));
+                if (product) renderProductDetailImages();
             });
             document.getElementById('checkout-cart-button').disabled = cart.size === 0;
             document.getElementById('product-detail-modal').addEventListener('click', event => {

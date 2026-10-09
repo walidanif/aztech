@@ -274,6 +274,9 @@ function validateProduct(input) {
     const category = String(input.category || '');
     const description = String(input.description || '').trim();
     const img = String(input.img || '').trim();
+    if (input.images !== undefined && !Array.isArray(input.images)) throw httpError(400, 'Product images must be a list.');
+    const images = (Array.isArray(input.images) && input.images.length ? input.images : [img])
+        .map(image => String(image || '').trim());
     const price = Number(input.price);
     const oldPrice = input.oldPrice === '' || input.oldPrice == null ? 0 : Number(input.oldPrice);
 
@@ -284,19 +287,20 @@ function validateProduct(input) {
     if (!Number.isFinite(oldPrice) || oldPrice < 0 || oldPrice > 100000000) throw httpError(400, 'Enter a valid original price.');
     if (oldPrice > 0 && price > oldPrice) throw httpError(400, 'Current price cannot exceed the original price.');
     if (description.length > 2000) throw httpError(400, 'Description cannot exceed 2000 characters.');
-    if (!img || img.length > 2000) throw httpError(400, 'Provide a product image path or HTTPS URL.');
-    if (/^https?:\/\//i.test(img)) {
-        if (!/^https:\/\//i.test(img)) throw httpError(400, 'External product images must use HTTPS.');
-    } else if (!/^assets\/products\/[a-zA-Z0-9._/-]+$/.test(img) || img.includes('..')) {
-        if (!/^uploads\/[0-9a-f-]{36}\.(png|jpg|webp|gif)$/i.test(img)) {
-            throw httpError(400, 'Choose a valid product image.');
-        }
+    if (images.length > 10) throw httpError(400, 'A product can have up to 10 images.');
+    if (images.some(image => {
+        if (!image || image.length > 2000) return true;
+        if (/^https?:\/\//i.test(image)) return !/^https:\/\//i.test(image);
+        if (/^assets\/products\/[a-zA-Z0-9._/-]+$/.test(image) && !image.includes('..')) return false;
+        return !/^uploads\/[0-9a-f-]{36}\.(png|jpg|webp|gif)$/i.test(image);
+    })) {
+        throw httpError(400, 'Choose valid product images using HTTPS URLs or the image uploader.');
     }
 
     const discount = oldPrice > price && oldPrice > 0
         ? Math.round((1 - price / oldPrice) * 100)
         : 0;
-    return { title, brand, category, oldPrice, price, discount, description, img };
+    return { title, brand, category, oldPrice, price, discount, description, img: images[0], images };
 }
 
 function validatePermissions(input) {
@@ -962,6 +966,7 @@ const MIME_TYPES = {
     '.jpg': 'image/jpeg',
     '.jpeg': 'image/jpeg',
     '.webp': 'image/webp',
+    '.gif': 'image/gif',
     '.ico': 'image/x-icon'
 };
 

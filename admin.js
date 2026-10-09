@@ -33,7 +33,8 @@ let users = [];
 let orders = [];
 let orderUnreadCount = 0;
 let ordersSheetsConfigured = false;
-let previewObjectUrl = null;
+let previewObjectUrls = [];
+let productImagePaths = [];
 let activeOrder = null;
 let ordersPollTimer = null;
 let orderItemsDraft = [];
@@ -554,8 +555,7 @@ function renderProducts() {
 
 function openProductDialog(productId = null) {
     const form = document.getElementById('product-form');
-    if (previewObjectUrl) URL.revokeObjectURL(previewObjectUrl);
-    previewObjectUrl = null;
+    clearProductImagePreviews();
     form.reset();
     hideMessage('product-form-error');
     const product = productId ? products.find(item => item.id === productId) : null;
@@ -568,13 +568,36 @@ function openProductDialog(productId = null) {
     form.elements.oldPrice.value = product?.oldPrice || '';
     form.elements.img.value = product?.img || '';
     form.elements.description.value = product?.description || '';
+    productImagePaths = Array.isArray(product?.images) && product.images.length
+        ? [...product.images]
+        : (product?.img ? [product.img] : []);
     document.getElementById('product-image-name').textContent = product
-        ? 'Image actuelle conservée si aucune nouvelle photo n’est choisie.'
-        : 'Ajoutez une photo depuis votre appareil.';
-    const preview = document.getElementById('product-image-preview');
-    preview.src = product ? productImageUrl(product.img) : '';
-    preview.classList.toggle('hidden', !product?.img);
+        ? 'Les photos actuelles sont conservées. Les nouvelles photos seront ajoutées à la galerie.'
+        : 'Ajoutez une ou plusieurs photos depuis votre appareil.';
+    renderProductImagePreviews();
     document.getElementById('product-dialog').showModal();
+}
+
+function clearProductImagePreviews() {
+    previewObjectUrls.forEach(url => URL.revokeObjectURL(url));
+    previewObjectUrls = [];
+}
+
+function renderProductImagePreviews(selectedFiles = []) {
+    clearProductImagePreviews();
+    const previews = document.getElementById('product-image-previews');
+    const images = productImagePaths.map((image, index) => ({
+        src: productImageUrl(image),
+        alt: `Photo actuelle ${index + 1}`
+    }));
+    selectedFiles.forEach((file, index) => {
+        const url = URL.createObjectURL(file);
+        previewObjectUrls.push(url);
+        images.push({ src: url, alt: `Nouvelle photo ${index + 1}` });
+    });
+    previews.innerHTML = images.map(image => `
+        <img src="${escapeHtml(image.src)}" alt="${escapeHtml(image.alt)}" class="h-24 w-full rounded-lg border border-gray-200 bg-white object-contain p-1">
+    `).join('');
 }
 
 function readImageDataUrl(file) {
@@ -590,7 +613,7 @@ async function saveProduct(event) {
     event.preventDefault();
     const form = event.currentTarget;
     const id = form.elements.id.value;
-    const imageFile = form.elements.imageFile.files[0];
+    const imageFiles = Array.from(form.elements.imageFiles.files);
     const product = {
         title: form.elements.title.value.trim(),
         brand: form.elements.brand.value.trim(),
@@ -598,6 +621,7 @@ async function saveProduct(event) {
         price: Number(form.elements.price.value),
         oldPrice: Number(form.elements.oldPrice.value || 0),
         img: form.elements.img.value.trim(),
+        images: [...productImagePaths],
         description: form.elements.description.value.trim()
     };
     const submitButton = form.querySelector('[type="submit"]');
@@ -606,12 +630,17 @@ async function saveProduct(event) {
         if (product.oldPrice > 0 && product.price > product.oldPrice) {
             throw new Error('Le prix actuel ne peut pas dépasser l’ancien prix.');
         }
-        if (imageFile) {
+        if (product.images.length + imageFiles.length > 10) {
+            throw new Error('Un article peut contenir jusqu’à 10 photos.');
+        }
+        for (const imageFile of imageFiles) {
             if (!['image/png', 'image/jpeg', 'image/webp', 'image/gif'].includes(imageFile.type)) {
                 throw new Error('Choisissez une image PNG, JPEG, WebP ou GIF.');
             }
             if (imageFile.size > 5 * 1024 * 1024) throw new Error('La photo doit faire 5 Mo maximum.');
-            const platform = await api('/api/platform');
+        }
+        const platform = imageFiles.length ? await api('/api/platform') : null;
+        for (const imageFile of imageFiles) {
             const uploaded = platform.serverless
                 ? await api('/api/admin/uploads/product-image', {
                     method: 'POST',
@@ -629,8 +658,9 @@ async function saveProduct(event) {
                 });
                 if (!response.ok) throw new Error('Impossible d’enregistrer la photo dans Supabase.');
             }
-            product.img = uploaded.img;
+            product.images.push(uploaded.img);
         }
+        product.img = product.images[0] || '';
         if (!product.img) throw new Error('Choisissez une photo pour cet article.');
         const result = await api(id ? `/api/admin/products/${id}` : '/api/admin/products', {
             method: id ? 'PUT' : 'POST',
@@ -865,15 +895,19 @@ document.getElementById('user-form').addEventListener('submit', createUser);
 document.getElementById('product-form').addEventListener('submit', saveProduct);
 document.getElementById('add-product-button').addEventListener('click', () => openProductDialog());
 document.getElementById('product-dialog-close').addEventListener('click', () => document.getElementById('product-dialog').close());
-document.querySelector('#product-form [name="imageFile"]').addEventListener('change', event => {
-    const file = event.currentTarget.files[0];
-    const preview = document.getElementById('product-image-preview');
-    if (!file) return;
-    document.getElementById('product-image-name').textContent = file.name;
-    if (previewObjectUrl) URL.revokeObjectURL(previewObjectUrl);
-    previewObjectUrl = URL.createObjectURL(file);
-    preview.src = previewObjectUrl;
-    preview.classList.remove('hidden');
+document.querySelector('#product-form [name="imageFiles"]').addEventListener('change', event => {
+    const files = Array.from(event.currentTarget.files);
+    if (productImagePaths.length + files.length > 10) {
+        event.currentTarget.value = '';
+        showMessage('product-form-error', 'Un article peut contenir jusqu’à 10 photos.', true);
+        renderProductImagePreviews();
+        return;
+    }
+    hideMessage('product-form-error');
+    document.getElementById('product-image-name').textContent = files.length
+        ? `${files.length} nouvelle(s) photo(s) sélectionnée(s).`
+        : 'Les photos actuelles sont conservées.';
+    renderProductImagePreviews(files);
 });
 document.getElementById('new-user-role').addEventListener('change', syncUserPermissionVisibility);
 document.getElementById('product-search').addEventListener('input', renderProducts);
